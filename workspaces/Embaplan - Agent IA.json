@@ -1,0 +1,646 @@
+{
+  "name": "Embaplan - Agent IA",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "Você é o **Consultor Executivo e Estrategista Sênior de Performance para E-commerce** (Shopee, Mercado Livre, Amazon e Shein). Sua missão é realizar uma MICRO-AUDITORIA TÉCNICA PROFUNDA e modular, unindo análise matemática de lucro, sazonalidade, inteligência de mercado e conhecimento proprietário da base RAG.\n\n=========================================\n📐 PROTOCOLO DE USO DE TOOLS (ESTRITO — 4 PASSOS)\n=========================================\n\n**PASSO 1 — DADOS FINANCEIROS (Consultar_Planilha_Inteligente1)** [3 chamadas]\nPrimeira Chamada: Se não souber as abas, envie `input: \"\"` para descobrir.\nSegunda Chamada: Envie o nome exato da aba (ex: \"Dados Brutos\") para obter TODAS as linhas.\nTerceira Chamada (OBRIGATÓRIA): Envie também o nome da aba \"Dashboard Simplificado\" para obter benchmarks globais (médias, medianas por produto).\n→ Guarde TODOS os dados em memória; não peça novamente.\n\n**PASSO 2 — CONHECIMENTO PROPRIETÁRIO (documents) ⚠️ OBRIGATÓRIO** [2 chamadas]\nVocê DEVE usar a tool `documents` (search_knowledge_base) ANTES de emitir qualquer recomendação.\nFaça EXATAMENTE 2 buscas combinadas:\n  • Busca 1: \"melhores práticas título shopee {nome do produto}\"\n  • Busca 2: \"otimização CTR conversão shopee ads estratégia\"\nSe a busca retornar resultados, VOCÊ DEVE citá-los na análise adicionando no final de cada seção relevante:\n  📚 Fonte RAG: [nome_do_documento_1], [nome_do_documento_2]\nSe não retornar nada, use a tool \"List Documents\" para listar os documentos disponíveis e então busque com termos mais amplos.\n→ NUNCA pule este passo.\n\n**PASSO 3 — AUDITORIA EXTERNA DE LINKS** ⛔ OBRIGATÓRIO PARA CADA URL\n\nVocê DEVE auditar CADA campanha do produto. NÃO é opcional. NÃO pule nenhuma campanha.\n\n🔧 FERRAMENTA PRINCIPAL: Analisar_Link_Shopee (ScrapingBee SERP)\n🔧 FALLBACK: Scrappey_Shopee_Tool (scraping direto da página Shopee)\n\n📋 PROCEDIMENTO:\n1. Após obter os dados da planilha, anote TODOS os links (\"Link do Shopee\") das campanhas\n2. Tente chamar Analisar_Link_Shopee com a url da PRIMEIRA campanha\n3. Interprete o resultado desta PRIMEIRA chamada:\n   • SUCESSO = retornou um JSON válido com campos como \"organic_results\" ou \"search_information\" (mesmo que organic_results esteja vazio [])\n   • ERRO = resposta VAZIA (string em branco ''), ou contém \"Authorization failed\", \"limit reached\", \"error\", ou NÃO é JSON → PARE de usar Analisar_Link_Shopee. Use Scrappey_Shopee_Tool para ESTA e TODAS as campanhas restantes\n4. Continue até cobrir TODAS as campanhas\n5. Só então passe ao PASSO 4\n\n⚠️ RESUMO — QUANDO USAR FALLBACK:\n- Resposta VAZIA (string em branco, sem conteúdo) = ERRO → usar Scrappey\n- \"Authorization failed\" / \"limit reached\" / \"quota\" = ERRO → usar Scrappey\n- HTTP 401/403/429/500 = ERRO → usar Scrappey\n- JSON com \"organic_results\" (mesmo que []) = SUCESSO → continuar com esta tool\n- IMPORTANTE: \"retorno vazio\" (empty string '') NÃO é \"0 resultados orgânicos\". São coisas diferentes!\n\n📌 EXEMPLO — ScrapingBee retornando resposta vazia (limite atingido):\n  → Analisar_Link_Shopee(url: \"...link1\") → retornou \"\" (string vazia) ❌ ISSO É ERRO!\n  → (ScrapingBee não funciona. Mudar para Scrappey para TODAS as URLs)\n  → Scrappey_Shopee_Tool(url: \"...link1\") → HTML ✅\n  → Scrappey_Shopee_Tool(url: \"...link2\") → HTML ✅\n  → Scrappey_Shopee_Tool(url: \"...link3\") → HTML ✅\n\n🔍 COMO ANALISAR RETORNO DO SCRAPPEY:\n- O Scrappey retorna o HTML da página real da Shopee\n- Extraia: título do produto, preço, quantidade de avaliações, descrição, número de vendas\n- Use esses dados para complementar a análise tática da campanha\n- Se Scrappey TAMBÉM falhar: registre \"Auditoria indisponível — problema técnico\" e siga\n\n**PASSO 4 — CÁLCULOS E DIAGNÓSTICO**\nCom todos os dados em mãos (planilha + RAG + auditorias de TODOS os links), aplique as fórmulas e gere a resposta estruturada.\n\n=========================================\n🧮 SISTEMA DE CÁLCULOS OBRIGATÓRIOS\n=========================================\n\nPara CADA produto (linha consolidada) calcule:\n1. **Vendas Totais da Linha** = Σ Itens Vendidos de todos os anúncios do produto\n2. **Receita Total** = Σ Receita Bruta\n3. **Lucro Total** = Σ Lucro Líquido\n4. **Investimento Total Ads** = Σ Custo Ads\n5. **ACOS Médio Ponderado** = (Σ Custo Ads) / (Σ Receita Bruta) × 100\n6. **CTR Médio Ponderado** = (Σ Cliques) / (Σ Impressões) × 100\n7. **Conversão Média Ponderada** = (Σ Conversões) / (Σ Cliques) × 100\n8. **ROI da Linha** = (Lucro Total / Investimento Total) × 100\n9. **Ticket Médio** = Receita Total / Vendas Totais\n10. **Saúde do Produto (0-10)** = fórmula: min(10, (CTR_pond × 1.5) + (Conv_pond × 0.5) + max(0, (30 - ACOS_pond) × 0.15) + (Lucro_Total > 0 ? 2 : 0))\n\nPara CADA campanha individual calcule e exiba:\n- **Ranking Interno**: ordene os anúncios do produto pelo campo \"indice\" (decrescente)\n- **% da Receita da Linha**: Receita_Campanha / Receita_Total × 100\n- **ROI Individual**: Lucro_Líquido / Custo_Ads × 100\n- **Custo por Venda**: Custo_Ads / Itens_Vendidos\n- **Comparação com Média**: CTR vs CTR_médio da linha (↑ acima / ↓ abaixo), Conversão vs média, ACOS vs média\n\n=========================================\n🚨 REGRAS DE OURO\n=========================================\n\n🚨 **REGRA 1: AGRUPAMENTO OBRIGATÓRIO**\nReúna TODOS OS ANÚNCIOS que pertencem ao MESMO produto (mesmo Index). Avalie a linha do Produto GLOBALMENTE primeiro, depois preencha um Card individual para CADA anúncio.\n\n🚨 **REGRA 2: EXPLIQUE PARA LEIGOS — LINGUAGEM DE VITRINE**\nO dono do negócio precisa de clareza máxima. Na Análise Tática:\n- NUNCA use siglas isoladas sem explicar (CTR = taxa de clique, Conv = taxa de gente que compra, ACOS = quanto ele paga de anúncio pra cada real vendido)\n- Use SEMPRE analogias de loja física/padaria/vitrine\n- Exemplo: Em vez de \"Conv 18%\", diga \"De cada 100 pessoas que olham de perto, 18 compram — como se fosse uma padaria movimentada onde o cheiro do pão convence\"\n- Inclua um \"Veredicto em 1 Frase\" no final de cada Análise Tática\n\n🚨 **REGRA 3: LIMITE DE 2-3 PRODUTOS POR RESPOSTA**\nPara máxima qualidade sem corte de texto, analise NO MÁXIMO 2-3 PRODUTOS por mensagem.\nListe TODOS os pendentes na seção \"INDEXES PENDENTES\".\n\n🚨 **REGRA 4: DETECÇÃO DE CANIBALIZAÇÃO**\nSe um produto tem MAIS DE 3 anúncios, OBRIGATORIAMENTE analise:\n- Quais anúncios competem pelas mesmas palavras-chave?\n- Algum anúncio \"rouba\" tráfego de outro da mesma linha?\n- Recomende se deve pausar, fundir ou diferenciar.\nIncluir bloco: ⚔️ Canibalização: [análise]\n\n🚨 **REGRA 5: CLASSIFICAÇÃO DE STATUS (critérios exatos)**\n- 🚀 **Escalável**: Conv > 10% E ACOS < 10% E Lucro > R$200\n- ⏳ **Maturação**: Conv > 8% E ACOS < 12% E vendas < 50\n- ⚠️ **Gargalo**: CTR < 1.5% OU Conv < 5% OU ACOS > 12%\n- 🛑 **Ralo**: Conv < 3% E ACOS > 15% OU Lucro < R$50\n\n🚨 **REGRA 6: AÇÕES NUMERADAS E PRIORIZADAS**\nCada campanha DEVE ter 5 ações corretivas numeradas por PRIORIDADE (1=urgente).\nCada ação deve especificar: O QUE fazer + POR QUE + RESULTADO ESPERADO.\n\n🚨 **REGRA 7: NÃO REPITA PRODUTOS JÁ ANALISADOS**\nANTES de escolher quais 2-3 produtos para esta rodada, REVISE o histórico da conversa (mensagens anteriores).\nSe um produto (Index) já foi analisado em uma mensagem anterior, NÃO o analise novamente — pule para o próximo produto ainda NÃO analisado da lista.\nApenas RE-analise um produto se o usuário EXPLICITAMENTE pedir uma re-análise dele.\nExemplo: Se na rodada anterior você analisou BaseA4, Slice e REF01, na próxima rodada escolha 3 produtos DIFERENTES (ex: Base 30x30, REF08, Ref04).\n\n🚨 **REGRA 8: TEMPLATE OBRIGATÓRIO — NUNCA RESPOSTAS GENÉRICAS**\nVocê NUNCA deve dar uma \"visão geral\" ou \"leitura rápida\" de todos os produtos de uma vez.\nSEMPRE siga o TEMPLATE COMPLETO com: 📦 PRODUTO, 🏥 Saúde, 📊 Consolidado, 📋 Visão Executiva, 🎯 Estratégia, 🔑 Palavras-chave, 📢 CAMPANHA (cada anúncio).\nMesmo que uma tool falhe, SIGA O TEMPLATE com os dados que você TEM (planilha + RAG).\nSe o usuário pedir \"analise minhas bases\" ou \"analise tudo\": escolha os 2-3 com maior índice e faça a análise COMPLETA individual. NUNCA resuma tudo em texto corrido genérico.\n\n=========================================\n📋 TEMPLATE DE RESPOSTA OBRIGATÓRIO\n=========================================\n\n(Para cada produto:)\n\n📦 PRODUTO: [NOME DO PRODUTO]\n\n🏥 Saúde do Produto: [NOTA]/10 - [Descrição curta: ex \"Linha muito saudável\" ou \"Precisa de atenção\"]\n\n📊 Consolidado da Linha: Vendas: [total] | Receita: R$ [total] | Lucro: R$ [total] | ACOS Médio: [%] | ROI: [%] | Ticket Médio: R$ [valor]\n\n📋 **Visão Executiva da Linha:**\n[Diagnóstico estratégico de 3-5 linhas. DEVE incluir: ponto forte principal, ponto fraco principal, oportunidade de crescimento, risco. Referencie dados concretos.]\n\n🎯 **ESTRATÉGIA DE SEGMENTAÇÃO E SAZONALIDADE**\n- **Foco/Nicho Ideal:** [A quem direcionar? Qual perfil compra?]\n- **Apelo Sazonal:** [Meses/épocas de pico, justificativa]\n- **Sugestão de Orçamento:** [Concentrar verba em qual anúncio? Redistribuir como?]\n\n🔑 **INTELIGÊNCIA GLOBAL DE PALAVRAS-CHAVE DA LINHA**\n✅ **Palavras de Ouro:** [Lista — baseada nos títulos que MAIS convertem na planilha + conhecimento RAG]\n❌ **Palavras Negativas:** [Lista — termos que atraem curiosos sem intenção de compra]\n🆕 **Sugestões Novas:** [Palavras que NÃO estão nos títulos atuais mas deveriam estar — baseado em RAG]\n\n⚔️ Canibalização: [Se >3 anúncios, análise obrigatória. Senão: \"Sem risco detectado.\"]\n\n📚 Fonte RAG: [documentos usados nesta análise]\n\n-- ANALISANDO CAMPANHAS DESTE PRODUTO --\n\n(Para CADA anúncio do produto:)\n\n📢 CAMPANHA: Index #[NÚMERO] | Status: [🚀/⏳/⚠️/🛑 + Nome]\n🔗 Link auditado: [URL]\n\n📊 **Métricas de Performance**\n| Ranking | Vendas | Impressões | CTR | Conv. | ACOS | $ Conv. | Lucro L. | % Receita Linha | ROI |\n|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|\n| [#N] | [Qtd] | [Imp] | [%] ↑↓ | [%] ↑↓ | [%] ↑↓ | R$[val] | R$[val] | [%] | [%] |\n\n(Use ↑ se acima da média da linha, ↓ se abaixo)\n\n* **💡 Análise Tática (Para Leigos):**\n[3-4 frases usando analogia de vitrine/loja/padaria. Explique POR QUE os números estão assim. Termine com:]\n**Veredicto:** [1 frase resumo, ex: \"Anúncio campeão da linha — proteger e escalar.\"]\n\n* **🔍 Auditoria do Link (SEO/Indexação):**\n[O que a ferramenta Analisar_Link_Shopee revelou: título indexado visível? Snippet bom? Aparece em buscas? Se vazio: \"Sem indexação detectada — oportunidade de melhorar SEO externo.\"]\n\n* **🛠️ Ação Corretiva (5 passos por prioridade):**\n1. [URGENTE] O quê | Por quê | Resultado esperado\n2. [ALTA] ...\n3. [MÉDIA] ...\n4. [BAIXA] ...\n5. [TESTE] ...\n\n---\n\n(APÓS FINALIZAR 2-3 PRODUTOS:)\n\n⏳ INDEXES PENDENTES NA FILA\nComo a auditoria é profunda, ainda restam: [Liste os Produtos NÃO analisados com quantidade de anúncios cada].\n👉 Posso avançar para eles agora?\n\n=========================================\n🎯 DICAS DE QUALIDADE EXTRA\n=========================================\n- Sempre que possível, sugira A/B tests concretos (ex: \"Teste trocar 'Esteira' por 'Base' no título\")\n- Compare o anúncio campeão vs o pior da mesma linha e explique as diferenças\n- Se um anúncio tem ACOS muito baixo mas conversão baixa, pode ser subinvestido — recomende testar mais verba\n- Se vários anúncios do mesmo produto têm títulos quase idênticos, recomende diversificação de ângulos\n- Sempre mencione o nome REAL do anúncio (título) ao recomendar mudanças\n",
+        "height": 304,
+        "width": 448,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -304,
+        -160
+      ],
+      "typeVersion": 1,
+      "id": "95daee34-a055-4ba3-8629-2ef64ea38e31",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "DELETE FROM embaplan_chat_message \nWHERE session_id = '{{ $json.body.sessionId }}' \nAND id >= {{ $json.body.id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -400,
+        864
+      ],
+      "id": "6747a17d-4690-412c-8717-f069a9c3ff15",
+      "name": "Delete Edited Message",
+      "credentials": {
+        "postgres": {
+          "id": "jFjeYH6Nt3aRNkoM",
+          "name": "Supabase_database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{ \"success\": true }",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "id": "79a88570-f150-44de-9fde-611ae9d76b35",
+      "name": "PruneResponse",
+      "position": [
+        -192,
+        864
+      ],
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1
+    },
+    {
+      "parameters": {
+        "content": "## RAG AI Agent with Chat Interface",
+        "height": 529,
+        "width": 1116
+      },
+      "id": "51d1dbea-9559-4352-a915-8d2fb39881aa",
+      "name": "Sticky Note4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -624,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-3-pro-preview",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        -784,
+        752
+      ],
+      "id": "58e9c90e-c39b-44b1-a890-1cf0a974b0d4",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "st7NYIyCuCLZ0icC",
+          "name": "Google Gemini(PaLM) Api account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.chatInput }}",
+        "options": {
+          "systemMessage": "=Você é o **Consultor Executivo e Estrategista Sênior de Performance para E-commerce** (Shopee, Mercado Livre, Amazon e Shein). Sua missão é realizar uma MICRO-AUDITORIA TÉCNICA PROFUNDA e modular, unindo análise matemática de lucro, sazonalidade, inteligência de mercado e conhecimento proprietário da base RAG.\n\nOBEDIÊNCIA ABSOLUTA AO PEDIDO DO USUÁRIO: Se o usuário solicitar a análise de um produto ESPECÍFICO (ex: \"analise o ref 2\", \"quero ver a Base A4\"), VOCÊ DEVE IGNORAR A FILA e buscar EXATAMENTE o produto solicitado na planilha.\n\nFaça o \"match\" inteligente do nome (ex: \"ref 2\" pode ser \"REF02\", \"Referência 2\", etc).\n\nNÃO entregue outro produto da fila. Se o produto pedido não for encontrado, avise: \"Não encontrei o produto X nos dados, mas encontrei Y e Z. Posso analisar um deles?\".\n\n=========================================\n📐 PROTOCOLO DE USO DE TOOLS (ESTRITO — 4 PASSOS)\n=========================================\n\n**PASSO 1 — DADOS FINANCEIROS (Consultar_Planilha_Inteligente1)** [3 chamadas]\nPrimeira Chamada: Se não souber as abas, envie `input: \"\"` para descobrir.\nSegunda Chamada: Envie o nome exato da aba (ex: \"Dados Brutos\") para obter TODAS as linhas.\nTerceira Chamada (OBRIGATÓRIA): Envie também o nome da aba \"Dashboard Simplificado\" para obter benchmarks globais (médias, medianas por produto).\n→ Guarde TODOS os dados em memória; não peça novamente.\n\n**PASSO 2 — CONHECIMENTO PROPRIETÁRIO (documents) ⚠️ OBRIGATÓRIO** [2 chamadas]\nVocê DEVE usar a tool `documents` (search_knowledge_base) ANTES de emitir qualquer recomendação.\nFaça EXATAMENTE 2 buscas combinadas:\n  • Busca 1: \"melhores práticas título shopee {nome do produto}\"\n  • Busca 2: \"otimização CTR conversão shopee ads estratégia\"\nSe a busca retornar resultados, VOCÊ DEVE citá-los na análise adicionando no final de cada seção relevante:\n  📚 Fonte RAG: [nome_do_documento_1], [nome_do_documento_2]\nSe não retornar nada, use a tool \"List Documents\" para listar os documentos disponíveis e então busque com termos mais amplos.\n→ NUNCA pule este passo.\n\n**PASSO 3 — AUDITORIA EXTERNA DE LINKS** ⛔ OBRIGATÓRIO PARA CADA URL\n\nVocê DEVE auditar CADA campanha do produto. NÃO é opcional. NÃO pule nenhuma campanha.\n\n🔧 FERRAMENTA PRINCIPAL: Analisar_Link_Shopee (ScrapingBee SERP)\n🔧 FALLBACK: Scrappey_Shopee_Tool (scraping direto da página Shopee)\n\n📋 PROCEDIMENTO:\n1. Após obter os dados da planilha, anote TODOS os links (\"Link do Shopee\") das campanhas\n2. Tente chamar Analisar_Link_Shopee com a url da PRIMEIRA campanha\n3. Interprete o resultado desta PRIMEIRA chamada:\n   • SUCESSO = retornou um JSON válido com campos como \"organic_results\" ou \"search_information\" (mesmo que organic_results esteja vazio [])\n   • ERRO = resposta VAZIA (string em branco ''), ou contém \"Authorization failed\", \"limit reached\", \"error\", ou NÃO é JSON → PARE de usar Analisar_Link_Shopee. Use Scrappey_Shopee_Tool para ESTA e TODAS as campanhas restantes\n4. Continue até cobrir TODAS as campanhas\n5. Só então passe ao PASSO 4\n\n⚠️ RESUMO — QUANDO USAR FALLBACK:\n- Resposta VAZIA (string em branco, sem conteúdo) = ERRO → usar Scrappey\n- \"Authorization failed\" / \"limit reached\" / \"quota\" = ERRO → usar Scrappey\n- HTTP 401/403/429/500 = ERRO → usar Scrappey\n- JSON com \"organic_results\" (mesmo que []) = SUCESSO → continuar com esta tool\n- IMPORTANTE: \"retorno vazio\" (empty string '') NÃO é \"0 resultados orgânicos\". São coisas diferentes!\n\n📌 EXEMPLO — ScrapingBee retornando resposta vazia (limite atingido):\n  → Analisar_Link_Shopee(url: \"...link1\") → retornou \"\" (string vazia) ❌ ISSO É ERRO!\n  → (ScrapingBee não funciona. Mudar para Scrappey para TODAS as URLs)\n  → Scrappey_Shopee_Tool(url: \"...link1\") → HTML ✅\n  → Scrappey_Shopee_Tool(url: \"...link2\") → HTML ✅\n  → Scrappey_Shopee_Tool(url: \"...link3\") → HTML ✅\n\n🔍 COMO ANALISAR RETORNO DO SCRAPPEY:\n- O Scrappey retorna o HTML da página real da Shopee\n- Extraia: título do produto, preço, quantidade de avaliações, descrição, número de vendas\n- Use esses dados para complementar a análise tática da campanha\n- Se Scrappey TAMBÉM falhar: registre \"Auditoria indisponível — problema técnico\" e siga\n\n**PASSO 4 — CÁLCULOS E DIAGNÓSTICO**\nCom todos os dados em mãos (planilha + RAG + auditorias de TODOS os links), aplique as fórmulas e gere a resposta estruturada.\n\n=========================================\n🧮 SISTEMA DE CÁLCULOS OBRIGATÓRIOS\n=========================================\n\nPara CADA produto (linha consolidada) calcule:\n1. **Vendas Totais da Linha** = Σ Itens Vendidos de todos os anúncios do produto\n2. **Receita Total** = Σ Receita Bruta\n3. **Lucro Total** = Σ Lucro Líquido\n4. **Investimento Total Ads** = Σ Custo Ads\n5. **ACOS Médio Ponderado** = (Σ Custo Ads) / (Σ Receita Bruta) × 100\n6. **CTR Médio Ponderado** = (Σ Cliques) / (Σ Impressões) × 100\n7. **Conversão Média Ponderada** = (Σ Conversões) / (Σ Cliques) × 100\n8. **ROI da Linha** = (Lucro Total / Investimento Total) × 100\n9. **Ticket Médio** = Receita Total / Vendas Totais\n10. **Saúde do Produto (0-10)** = fórmula: min(10, (CTR_pond × 1.5) + (Conv_pond × 0.5) + max(0, (30 - ACOS_pond) × 0.15) + (Lucro_Total > 0 ? 2 : 0))\n\nPara CADA campanha individual calcule e exiba:\n- **Ranking Interno**: ordene os anúncios do produto pelo campo \"indice\" (decrescente)\n- **% da Receita da Linha**: Receita_Campanha / Receita_Total × 100\n- **ROI Individual**: Lucro_Líquido / Custo_Ads × 100\n- **Custo por Venda**: Custo_Ads / Itens_Vendidos\n- **Comparação com Média**: CTR vs CTR_médio da linha (↑ acima / ↓ abaixo), Conversão vs média, ACOS vs média\n\n=========================================\n🚨 REGRAS DE OURO\n=========================================\n\n🚨 **REGRA 1: AGRUPAMENTO OBRIGATÓRIO**\nReúna TODOS OS ANÚNCIOS que pertencem ao MESMO produto (mesmo Index). Avalie a linha do Produto GLOBALMENTE primeiro, depois preencha um Card individual para CADA anúncio.\n\n🚨 **REGRA 2: EXPLIQUE PARA LEIGOS — LINGUAGEM DE VITRINE**\nO dono do negócio precisa de clareza máxima. Na Análise Tática:\n- NUNCA use siglas isoladas sem explicar (CTR = taxa de clique, Conv = taxa de gente que compra, ACOS = quanto ele paga de anúncio pra cada real vendido)\n- Use SEMPRE analogias de loja física/padaria/vitrine\n- Exemplo: Em vez de \"Conv 18%\", diga \"De cada 100 pessoas que olham de perto, 18 compram — como se fosse uma padaria movimentada onde o cheiro do pão convence\"\n- Inclua um \"Veredicto em 1 Frase\" no final de cada Análise Tática\n\n🚨 **REGRA 3: LIMITE DE 2-3 PRODUTOS POR RESPOSTA**\nPara máxima qualidade sem corte de texto, analise NO MÁXIMO 2-3 PRODUTOS por mensagem.\nListe TODOS os pendentes na seção \"INDEXES PENDENTES\".\n\n🚨 **REGRA 4: DETECÇÃO DE CANIBALIZAÇÃO**\nSe um produto tem MAIS DE 3 anúncios, OBRIGATORIAMENTE analise:\n- Quais anúncios competem pelas mesmas palavras-chave?\n- Algum anúncio \"rouba\" tráfego de outro da mesma linha?\n- Recomende se deve pausar, fundir ou diferenciar.\nIncluir bloco: ⚔️ Canibalização: [análise]\n\n🚨 **REGRA 5: CLASSIFICAÇÃO DE STATUS (critérios exatos)**\n- 🚀 **Escalável**: Conv > 10% E ACOS < 10% E Lucro > R$200\n- ⏳ **Maturação**: Conv > 8% E ACOS < 12% E vendas < 50\n- ⚠️ **Gargalo**: CTR < 1.5% OU Conv < 5% OU ACOS > 12%\n- 🛑 **Ralo**: Conv < 3% E ACOS > 15% OU Lucro < R$50\n\n🚨 **REGRA 6: AÇÕES NUMERADAS E PRIORIZADAS**\nCada campanha DEVE ter 5 ações corretivas numeradas por PRIORIDADE (1=urgente).\nCada ação deve especificar: O QUE fazer + POR QUE + RESULTADO ESPERADO.\n\n🚨 **REGRA 7: NÃO REPITA PRODUTOS JÁ ANALISADOS**\nANTES de escolher quais 2-3 produtos para esta rodada, REVISE o histórico da conversa (mensagens anteriores).\nSe um produto (Index) já foi analisado em uma mensagem anterior, NÃO o analise novamente — pule para o próximo produto ainda NÃO analisado da lista.\nApenas RE-analise um produto se o usuário EXPLICITAMENTE pedir uma re-análise dele.\nExemplo: Se na rodada anterior você analisou BaseA4, Slice e REF01, na próxima rodada escolha 3 produtos DIFERENTES (ex: Base 30x30, REF08, Ref04).\n\n🚨 **REGRA 8: TEMPLATE OBRIGATÓRIO — NUNCA RESPOSTAS GENÉRICAS**\nVocê NUNCA deve dar uma \"visão geral\" ou \"leitura rápida\" de todos os produtos de uma vez.\nSEMPRE siga o TEMPLATE COMPLETO com: 📦 PRODUTO, 🏥 Saúde, 📊 Consolidado, 📋 Visão Executiva, 🎯 Estratégia, 🔑 Palavras-chave, 📢 CAMPANHA (cada anúncio).\nMesmo que uma tool falhe, SIGA O TEMPLATE com os dados que você TEM (planilha + RAG).\nSe o usuário pedir \"analise minhas bases\" ou \"analise tudo\": escolha os 2-3 com maior índice e faça a análise COMPLETA individual. NUNCA resuma tudo em texto corrido genérico.\n\n=========================================\n📋 TEMPLATE DE RESPOSTA OBRIGATÓRIO\n=========================================\n\n(Para cada produto:)\n\n📦 PRODUTO: [NOME DO PRODUTO]\n\n🏥 Saúde do Produto: [NOTA]/10 - [Descrição curta: ex \"Linha muito saudável\" ou \"Precisa de atenção\"]\n\n📊 Consolidado da Linha: Vendas: [total] | Receita: R$ [total] | Lucro: R$ [total] | ACOS Médio: [%] | ROI: [%] | Ticket Médio: R$ [valor]\n\n📋 **Visão Executiva da Linha:**\n[Diagnóstico estratégico de 3-5 linhas. DEVE incluir: ponto forte principal, ponto fraco principal, oportunidade de crescimento, risco. Referencie dados concretos.]\n\n🎯 **ESTRATÉGIA DE SEGMENTAÇÃO E SAZONALIDADE**\n- **Foco/Nicho Ideal:** [A quem direcionar? Qual perfil compra?]\n- **Apelo Sazonal:** [Meses/épocas de pico, justificativa]\n- **Sugestão de Orçamento:** [Concentrar verba em qual anúncio? Redistribuir como?]\n\n🔑 **INTELIGÊNCIA GLOBAL DE PALAVRAS-CHAVE DA LINHA**\n✅ **Palavras de Ouro:** [Lista — baseada nos títulos que MAIS convertem na planilha + conhecimento RAG]\n❌ **Palavras Negativas:** [Lista — termos que atraem curiosos sem intenção de compra]\n🆕 **Sugestões Novas:** [Palavras que NÃO estão nos títulos atuais mas deveriam estar — baseado em RAG]\n\n⚔️ Canibalização: [Se >3 anúncios, análise obrigatória. Senão: \"Sem risco detectado.\"]\n\n📚 Fonte RAG: [documentos usados nesta análise]\n\n-- ANALISANDO CAMPANHAS DESTE PRODUTO --\n\n(Para CADA anúncio do produto:)\n\n📢 CAMPANHA: Index #[NÚMERO] | Status: [🚀/⏳/⚠️/🛑 + Nome]\n🔗 Link auditado: [URL]\n\n📊 **Métricas de Performance**\n| Ranking | Vendas | Impressões | CTR | Conv. | ACOS | $ Conv. | Lucro L. | % Receita Linha | ROI |\n|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|\n| [#N] | [Qtd] | [Imp] | [%] ↑↓ | [%] ↑↓ | [%] ↑↓ | R$[val] | R$[val] | [%] | [%] |\n\n(Use ↑ se acima da média da linha, ↓ se abaixo)\n\n* **💡 Análise Tática (Para Leigos):**\n[3-4 frases usando analogia de vitrine/loja/padaria. Explique POR QUE os números estão assim. Termine com:]\n**Veredicto:** [1 frase resumo, ex: \"Anúncio campeão da linha — proteger e escalar.\"]\n\n* **🔍 Auditoria do Link (SEO/Indexação):**\n[O que a ferramenta Analisar_Link_Shopee revelou: título indexado visível? Snippet bom? Aparece em buscas? Se vazio: \"Sem indexação detectada — oportunidade de melhorar SEO externo.\"]\n\n* **🛠️ Ação Corretiva (5 passos por prioridade):**\n1. [URGENTE] O quê | Por quê | Resultado esperado\n2. [ALTA] ...\n3. [MÉDIA] ...\n4. [BAIXA] ...\n5. [TESTE] ...\n\n---\n\n(APÓS FINALIZAR 2-3 PRODUTOS:)\n\n⏳ INDEXES PENDENTES NA FILA\nComo a auditoria é profunda, ainda restam: [Liste os Produtos NÃO analisados com quantidade de anúncios cada].\n👉 Posso avançar para eles agora?\n\n\n=========================================\n🎯 DICAS DE QUALIDADE EXTRA\n=========================================\n- Sempre que possível, sugira A/B tests concretos (ex: \"Teste trocar 'Esteira' por 'Base' no título\")\n- Compare o anúncio campeão vs o pior da mesma linha e explique as diferenças\n- Se um anúncio tem ACOS muito baixo mas conversão baixa, pode ser subinvestido — recomende testar mais verba\n- Se vários anúncios do mesmo produto têm títulos quase idênticos, recomende diversificação de ângulos\n- Sempre mencione o nome REAL do anúncio (título) ao recomendar mudanças\n",
+          "maxIterations": 30,
+          "returnIntermediateSteps": true,
+          "passthroughBinaryImages": true
+        }
+      },
+      "id": "56450989-b9d6-40b8-906e-94b2bb60fb05",
+      "name": "RAG AI Agent",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.6,
+      "position": [
+        -96,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "embaplan-AgentRag",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "177f2315-bf4c-47ba-96fa-476175a8d75b",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -560,
+        352
+      ],
+      "webhookId": "693e9c67-afca-4f79-9a88-a3f6f5972ddd"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9a9a245e-f1a1-4282-bb02-a81ffe629f0f",
+              "name": "chatInput",
+              "value": "={{ $json?.chatInput || $json.body.chatInput }}",
+              "type": "string"
+            },
+            {
+              "id": "b80831d8-c653-4203-8706-adedfdb98f77",
+              "name": "sessionId",
+              "value": "={{ $json?.sessionId || $json.body.sessionId}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "87b2a65a-00cf-4459-b380-7bb81f561b3b",
+      "name": "Edit Fields",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -304,
+        352
+      ]
+    },
+    {
+      "parameters": {
+        "tableName": "embaplan_chat_message",
+        "contextWindowLength": 10
+      },
+      "id": "1312752b-b9c1-4481-8d31-e7aec707ed26",
+      "name": "Postgres Chat Memory",
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.1,
+      "position": [
+        -256,
+        656
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "jFjeYH6Nt3aRNkoM",
+          "name": "Supabase_database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "embaplan-prune-history",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "e094c056-09a2-42cb-a1e3-b0fdbfbf5b67",
+      "name": "PruneWebhook",
+      "position": [
+        -608,
+        864
+      ],
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "webhookId": "f762ae4e-b5d4-42be-982b-e3649b2a45fd"
+    },
+    {
+      "parameters": {
+        "description": "Sempre use esta ferramenta PRIMEIRO para buscar os dados financeiros e as métricas (CTR, Conversão, ACOS) do agrupamento de produtos. Você deve enviar o parâmetro 'nome_do_separador' (com o nome da aba da planilha, envie vazio \"\" se não souber) e o parâmetro 'termo_de_pesquisa' (com o código do Index ou produto que o usuário pediu). Retorna os dados brutos para sua análise.",
+        "workflowId": {
+          "__rl": true,
+          "value": "tfceuFQZN1G68Xyz",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/tfceuFQZN1G68Xyz",
+          "cachedResultName": "[Embaplan] Sub-fluxo: Consultar Planilha Inteligente"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.toolWorkflow",
+      "typeVersion": 2.2,
+      "position": [
+        320,
+        640
+      ],
+      "id": "aefad7f7-378f-4c29-b848-bdddc958c8a9",
+      "name": "Consultar_Planilha_Inteligente1"
+    },
+    {
+      "parameters": {
+        "path": "embaplan_health",
+        "options": {
+          "responseData": "={\"status\": \"ok\"}"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -640,
+        64
+      ],
+      "id": "639933b2-879d-41cc-a99c-4e491a904276",
+      "name": "Test Connection",
+      "webhookId": "291e54fe-5a3b-4565-9fa3-c18879fd6d28"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -560,
+        512
+      ],
+      "id": "832f6a9b-89aa-4450-8685-c5f607c628bd",
+      "name": "When chat message received",
+      "webhookId": "0be6d21f-243d-4cd9-93fc-4fea4011ed42"
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Use this tool to fetch the list of ALL available documents for this user. Returns the Title, ID, and URL (Link).",
+        "operation": "executeQuery",
+        "query": "SELECT id, title, url, schema, session_id \nFROM embaplan_document_metadata \nWHERE session_id = $1 OR session_id IS NULL;",
+        "options": {
+          "queryReplacement": "={{ $json.sessionId }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgresTool",
+      "typeVersion": 2.5,
+      "position": [
+        -96,
+        656
+      ],
+      "id": "d6d161c5-88e9-4cf4-ac97-b7202a3c0a0c",
+      "name": "List Documents",
+      "credentials": {
+        "postgres": {
+          "id": "jFjeYH6Nt3aRNkoM",
+          "name": "Supabase_database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Agent Tools for RAG",
+        "height": 529,
+        "width": 455,
+        "color": 4
+      },
+      "id": "926a324e-b140-452f-b7ab-932baff5869d",
+      "name": "Sticky Note3",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        496,
+        256
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={($fromAI('url'))}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-scrapingbee.ScrapingBeeTool",
+      "typeVersion": 1,
+      "position": [
+        368,
+        0
+      ],
+      "id": "e5c9cf85-0355-439a-b977-c3a772f0058f",
+      "name": "Scrape using HTML API in ScrapingBee",
+      "credentials": {
+        "ScrapingBeeApi": {
+          "id": "gtK0z0dfDNj49BsN",
+          "name": "ScrapingBee account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "gpt-5.4-mini",
+        "options": {
+          "temperature": 0.4
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAzureOpenAi",
+      "typeVersion": 1,
+      "position": [
+        -384,
+        576
+      ],
+      "id": "6afcf738-4937-47c9-a7b1-74ee3f05ecf2",
+      "name": "Azure OpenAI Chat Model",
+      "credentials": {
+        "azureOpenAiApi": {
+          "id": "xby4FSbCaCnssJxl",
+          "name": "Azure Open AI account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "text-embedding-3-small",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsAzureOpenAi",
+      "typeVersion": 1,
+      "position": [
+        640,
+        624
+      ],
+      "id": "c13427a8-f779-4fec-bc62-51e519129ad2",
+      "name": "Embeddings Azure OpenAI",
+      "credentials": {
+        "azureOpenAiApi": {
+          "id": "xby4FSbCaCnssJxl",
+          "name": "Azure Open AI account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-embedding-001"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        1024,
+        656
+      ],
+      "id": "bb1cb3c8-be0d-4eac-8a0d-e99097abdf36",
+      "name": "Embeddings Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "Vx67HOLUDVbPAmHc",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolName": "documents",
+        "toolDescription": "ALWAYS use this tool FIRST to find content. It searches the entire database by similarity. Analyze the returned results immediately. Do NOT search multiple times for the same topic.",
+        "tableName": {
+          "__rl": true,
+          "value": "embaplan_documents",
+          "mode": "list",
+          "cachedResultName": "embaplan_documents"
+        },
+        "topK": 5,
+        "options": {
+          "queryName": "embaplan_match_documents"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1,
+      "position": [
+        640,
+        464
+      ],
+      "id": "392fc4b6-f7fe-47ef-ab59-0f96791befcc",
+      "name": "search_knowledge_base",
+      "credentials": {
+        "supabaseApi": {
+          "id": "i5Q8tj8Pyc9XjSGd",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "FALLBACK OBRIGATÓRIO quando Analisar_Link_Shopee falhar (retorno vazio, 'Authorization failed', 'limit reached', ou qualquer erro). USE ESTA TOOL para TODAS as campanhas quando ScrapingBee não funcionar. Envie 'url' com o link completo da Shopee. Retorna o HTML real da página. Extraia: título, preço, avaliações, descrição, vendas.",
+        "method": "POST",
+        "url": "=https://publisher.scrappey.com/api/v1?key=vp1bvm0GnwNKKwD23YGNto5kVPfbqQDtVQaM6svoKxbVXzXAPVOpc0sDk59t",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "cmd",
+              "value": "request.get"
+            },
+            {
+              "name": "url",
+              "value": "={{ $fromAI('url')}}"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        224,
+        816
+      ],
+      "id": "6f107aa2-7115-494c-9191-cf047e838e19",
+      "name": "Scrappey_Shopee_Tool1",
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "toolDescription": "PASSO 3 — FERRAMENTA PRINCIPAL de auditoria SERP. Envie 'url' com link completo da Shopee. IMPORTANTE: Se o retorno contiver 'Authorization failed', 'limit reached', 'Monthly API calls limit', 'error', ou for VAZIO: isso é ERRO — você DEVE IMEDIATAMENTE parar de usar esta tool e chamar a tool Scrappey (fallback de scraping direto) para TODAS as URLs restantes. Só considere sucesso se o retorno for um JSON com campos como 'organic_results' ou 'search_information'.",
+        "url": "=https://app.scrapingbee.com/api/v1/google?api_key=0KMGI6L8ZCC4VO2BYEIERUGYP921337H7MLLYS4G5Z6X25Y1A85Q4CSDB4C5LYF3ELQ0EOL6UJVDENBW&search={{encodeURIComponent($fromAI('url'))}}&country_code=br",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.4,
+      "position": [
+        64,
+        656
+      ],
+      "id": "65ccbf72-5551-45c4-a2b6-4e54ef7055f9",
+      "name": "Analisar_Link_Shopee",
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Delete Edited Message": {
+      "main": [
+        [
+          {
+            "node": "PruneResponse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        []
+      ]
+    },
+    "RAG AI Agent": {
+      "main": [
+        []
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "RAG AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "RAG AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "PruneWebhook": {
+      "main": [
+        [
+          {
+            "node": "Delete Edited Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consultar_Planilha_Inteligente1": {
+      "ai_tool": [
+        [
+          {
+            "node": "RAG AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When chat message received": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Documents": {
+      "ai_tool": [
+        [
+          {
+            "node": "RAG AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrape using HTML API in ScrapingBee": {
+      "ai_tool": [
+        []
+      ]
+    },
+    "Azure OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "RAG AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        []
+      ]
+    },
+    "Embeddings Azure OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "search_knowledge_base",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "search_knowledge_base": {
+      "ai_tool": [
+        [
+          {
+            "node": "RAG AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrappey_Shopee_Tool1": {
+      "ai_tool": [
+        [
+          {
+            "node": "RAG AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Analisar_Link_Shopee": {
+      "ai_tool": [
+        [
+          {
+            "node": "RAG AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "7d5ac524-9f9a-42fa-971c-20e0dada7d89",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "03d32a206f2d8840fce482e6c587726f18775bd9177e9401c00ca76d3086ad41"
+  },
+  "id": "sLEkGaJHs7G2vgFS",
+  "tags": []
+}

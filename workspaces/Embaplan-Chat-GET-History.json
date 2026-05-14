@@ -1,0 +1,117 @@
+{
+  "name": "Embaplan-Chat-GET-History",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "embaplan-history",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "f738c329-e264-43fe-8261-aac2f41bdff5",
+      "name": "When called - GET history",
+      "position": [
+        -64,
+        -96
+      ],
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "webhookId": "40010dce-b754-4779-8c5d-d2e32bc2dc91"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Substituindo .item por .first() para acessar os dados do primeiro item\nconst sessionId = $input.first().json.query?.sessionId || $input.first().json.queryString?.sessionId;\n\nif (!sessionId) {\n  throw new Error('sessionId query parameter is required');\n}\n\nreturn { sessionId };"
+      },
+      "id": "30936851-f629-4a5e-ba17-36eea99a76a8",
+      "name": "Extract Session ID",
+      "position": [
+        160,
+        -96
+      ],
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * \nFROM embaplan_chat_message \nWHERE session_id = '{{ $json.sessionId }}' \nORDER BY id ASC;",
+        "options": {}
+      },
+      "id": "65e9367a-6cb5-4166-82e7-aef3a6a18296",
+      "name": "Get History from DB",
+      "position": [
+        384,
+        -96
+      ],
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "credentials": {
+        "postgres": {
+          "id": "jFjeYH6Nt3aRNkoM",
+          "name": "Supabase_database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "id": "127e72e5-0797-44ad-9537-79e64658e96a",
+      "name": "Return History",
+      "position": [
+        608,
+        -96
+      ],
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When called - GET history": {
+      "main": [
+        [
+          {
+            "node": "Extract Session ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Session ID": {
+      "main": [
+        [
+          {
+            "node": "Get History from DB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get History from DB": {
+      "main": [
+        [
+          {
+            "node": "Return History",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "a5c0cdc4-b4e3-4973-aba2-5fc6efd23404",
+  "meta": {
+    "instanceId": "03d32a206f2d8840fce482e6c587726f18775bd9177e9401c00ca76d3086ad41"
+  },
+  "id": "JwaxwsIyso9Vltno",
+  "tags": []
+}

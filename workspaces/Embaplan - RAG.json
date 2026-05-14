@@ -1,0 +1,1837 @@
+{
+  "name": "Embaplan - RAG",
+  "nodes": [
+    {
+      "parameters": {
+        "jsonMode": "expressionData",
+        "jsonData": "={{ $json.data || $json.text || $json.concatenated_data || $json.text_for_rag }}",
+        "options": {
+          "metadata": {
+            "metadataValues": [
+              {
+                "name": "=file_id",
+                "value": "={{ $('Set File ID - to Context').first().json.file_id }}"
+              },
+              {
+                "name": "file_title",
+                "value": "={{ $('Set File ID - to Context').first().json.file_title }}"
+              }
+            ]
+          }
+        }
+      },
+      "id": "335800c4-da05-4383-ac18-f3def1d98bd4",
+      "name": "Default Data Loader",
+      "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
+      "typeVersion": 1,
+      "position": [
+        6240,
+        720
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## Tool to Add a Google Drive File to Vector DB",
+        "height": 947,
+        "width": 3809,
+        "color": 5
+      },
+      "id": "496c3e46-dac4-4695-b7df-285047a185f0",
+      "name": "Sticky Note1",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3008,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $('Set File ID - to Context').item.json.file_id }}",
+          "mode": "id"
+        },
+        "options": {
+          "googleFileConversion": {
+            "conversion": {
+              "docsToFormat": "text/plain"
+            }
+          }
+        }
+      },
+      "id": "ed9fffce-ec7e-4548-a5c3-ca0baa5889c8",
+      "name": "Download File",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        4832,
+        448
+      ],
+      "executeOnce": true,
+      "retryOnFail": true,
+      "maxTries": 2,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "1yxLK6IGIPQiU21B",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "text",
+        "options": {}
+      },
+      "id": "1c018957-f548-457f-bc62-c98ee80fa443",
+      "name": "Extract Document Text",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        5504,
+        752
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "pdf",
+        "options": {}
+      },
+      "id": "e491f5b7-6bbe-4ce9-8732-871f1305d285",
+      "name": "Extract PDF Text",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        5504,
+        192
+      ]
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "id": "765ee9fa-bfac-4176-ba0c-66e7f259ecc8",
+      "name": "Aggregate",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        5536,
+        368
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "ef3a96ab-bed9-470e-ab9f-d0eb48c37218",
+      "name": "Character Text Splitter",
+      "type": "@n8n/n8n-nodes-langchain.textSplitterCharacterTextSplitter",
+      "typeVersion": 1,
+      "position": [
+        6208,
+        864
+      ]
+    },
+    {
+      "parameters": {
+        "fieldsToSummarize": {
+          "values": [
+            {
+              "aggregation": "concatenate",
+              "field": "data"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "490ee353-548c-464c-a52c-d931c32edc69",
+      "name": "Summarize",
+      "type": "n8n-nodes-base.summarize",
+      "typeVersion": 1,
+      "position": [
+        5744,
+        448
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Set File ID - to Context').item.json.file_type }}",
+                    "rightValue": "application/pdf",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "2ae7faa7-a936-4621-a680-60c512163034",
+                    "leftValue": "={{ $('Set File ID - to Context').item.json.file_type }}",
+                    "rightValue": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "fc193b06-363b-4699-a97d-e5a850138b0e",
+                    "leftValue": "={{ $('Set File ID - to Context').item.json.file_type }}",
+                    "rightValue": "=application/vnd.google-apps.spreadsheet",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "id": "b69f5605-0179-4b02-9a32-e34bb085f82d",
+                    "leftValue": "={{ $('Set File ID - to Context').item.json.file_type }}",
+                    "rightValue": "application/vnd.google-apps.document",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": 3
+        }
+      },
+      "id": "d6fe2f20-279d-4a85-bb11-c027f6a39bc9",
+      "name": "Switch",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3,
+      "position": [
+        5008,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "insert",
+        "tableName": {
+          "__rl": true,
+          "value": "embaplan_documents",
+          "mode": "list",
+          "cachedResultName": "embaplan_documents"
+        },
+        "options": {
+          "queryName": "match_documents"
+        }
+      },
+      "id": "da2bc9c0-d88d-4bd7-b327-83e64fa801fe",
+      "name": "Insert into Supabase Vectorstore",
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
+      "typeVersion": 1,
+      "position": [
+        6224,
+        512
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "i5Q8tj8Pyc9XjSGd",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "options": {}
+      },
+      "id": "569f5f94-cac9-4e42-b3c2-4802d7e0d189",
+      "name": "Extract from Excel",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        5328,
+        368
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f422e2e0-381c-46ea-8f38-3f58c501d8b9",
+              "name": "schema",
+              "value": "={{ $('Extract from Excel').isExecuted ? $('Extract from Excel').first().json.keys().toJsonString() : $('Extract from CSV').first().json.keys().toJsonString() }}",
+              "type": "string"
+            },
+            {
+              "id": "bb07c71e-5b60-4795-864c-cc3845b6bc46",
+              "name": "data",
+              "value": "={{ $json.concatenated_data }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        5984,
+        240
+      ],
+      "id": "c48caa32-a9a3-4987-be82-3bd79895c39b",
+      "name": "Set Schema"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [
+        5328,
+        544
+      ],
+      "id": "57b0e923-2c97-4bf2-b015-14d6b891e66b",
+      "name": "Extract from CSV"
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": false
+        }
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        3456,
+        400
+      ],
+      "id": "735c41e4-9cf8-4638-941e-9ab4b540ed66",
+      "name": "Loop Over Items"
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "tableId": "aspiramaq_document_rows",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "dataset_id",
+              "condition": "eq",
+              "keyValue": "={{ $('Set File ID - to Context').item.json.file_id }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        4464,
+        544
+      ],
+      "id": "9dfe8457-11fc-446f-b117-d2287186bc0d",
+      "name": "Delete Old Data Rows",
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "i5Q8tj8Pyc9XjSGd",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "embaplan_document_rows",
+          "mode": "list",
+          "cachedResultName": "embaplan_document_rows"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "dataset_id": "={{ $('Set File ID - to Context').item.json.file_id }}",
+            "row_data": "={{ $json.toJsonString().replaceAll(/'/g, \"''\") }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "dataset_id",
+              "displayName": "dataset_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_data",
+              "displayName": "row_data",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        5536,
+        544
+      ],
+      "id": "2bd14796-8b0f-4780-8967-74cae764fa12",
+      "name": "Insert Table Rows",
+      "credentials": {
+        "postgres": {
+          "id": "jFjeYH6Nt3aRNkoM",
+          "name": "Supabase_database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "embaplan_document_metadata",
+          "mode": "list",
+          "cachedResultName": "embaplan_document_metadata"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $('Set File ID - to Context').item.json.file_id }}",
+            "schema": "={{ $json.schema }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": true,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "url",
+              "displayName": "url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "schema",
+              "displayName": "schema",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        6208,
+        240
+      ],
+      "id": "c40e4513-5b04-43b9-9cf9-26b8f5dbaf88",
+      "name": "Update Schema for Document Metadata",
+      "credentials": {
+        "postgres": {
+          "id": "jFjeYH6Nt3aRNkoM",
+          "name": "Supabase_database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## 🚀 Ultimate n8n Agentic RAG Template\n\n**Author:** [Cole Medin](https://www.youtube.com/@ColeMedin)\n\n## What is this?\nThis template provides a complete implementation of an **Agentic RAG (Retrieval Augmented Generation)** system in n8n that can be extended easily for your specific use case and knowledge base. Unlike standard RAG which only performs simple lookups, this agent can reason about your knowledge base, self-improve retrieval, and dynamically switch between different tools based on the specific question.\n\n## Why Agentic RAG?\nStandard RAG has significant limitations:\n- Poor analysis of numerical/tabular data\n- Missing context due to document chunking\n- Inability to connect information across documents\n- No dynamic tool selection based on question type\n\n## What makes this template powerful:\n- **Intelligent tool selection**: Switches between RAG lookups, SQL queries, or full document retrieval based on the question\n- **Complete document context**: Accesses entire documents when needed instead of just chunks\n- **Accurate numerical analysis**: Uses SQL for precise calculations on spreadsheet/tabular data\n- **Cross-document insights**: Connects information across your entire knowledge base\n- **Multi-file processing**: Handles multiple documents in a single workflow loop\n- **Efficient storage**: Uses JSONB in Supabase to store tabular data without creating new tables for each CSV\n\n## Getting Started\n1. Run the table creation nodes first to set up your database tables in Supabase\n2. Upload your documents through Google Drive (or swap out for a different file storage solution)\n3. The agent will process them automatically (chunking text, storing tabular data in Supabase)\n4. Start asking questions that leverage the agent's multiple reasoning approaches\n\n## Customization\nThis template provides a solid foundation that you can extend by:\n- Tuning the system prompt for your specific use case\n- Adding document metadata like summaries\n- Implementing more advanced RAG techniques\n- Optimizing for larger knowledge bases\n\n---\n\nI do intend on making a local version of this agent very soon!",
+        "height": 1400,
+        "width": 540,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        272,
+        80
+      ],
+      "typeVersion": 1,
+      "id": "f6ffa777-79a9-4155-9525-3cefd724f45b",
+      "name": "Sticky Note9"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "limit": 20,
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "1PBapZgevyPnwUSto6ei3LvCxkzIyzsIP",
+            "mode": "id"
+          }
+        },
+        "options": {
+          "fields": [
+            "*"
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        3248,
+        320
+      ],
+      "id": "23af34b8-a584-4ea9-a370-f53c553c77cf",
+      "name": "Search files and folders",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "1yxLK6IGIPQiU21B",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "DELETE FROM embaplan_documents \nWHERE metadata->>'file_id' = '{{ $json.file_id }}'\nAND (metadata->>'session_id' IS NULL OR metadata->>'session_id' = '');",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        4272,
+        288
+      ],
+      "id": "2e19b8a5-c915-4518-9525-19e03f621b94",
+      "name": "Delete Old Doc Rows1",
+      "credentials": {
+        "postgres": {
+          "id": "jFjeYH6Nt3aRNkoM",
+          "name": "Supabase_database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "inputDataFieldName": "data0",
+        "name": "={{ $now.format('dd-LL-yyyy') }}_{{ $binary.data0.fileName }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1PBapZgevyPnwUSto6ei3LvCxkzIyzsIP",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        3232,
+        576
+      ],
+      "id": "d2f56677-69cf-4011-be1f-8c406d7f17f1",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "1yxLK6IGIPQiU21B",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "embaplan-index-drive",
+        "responseMode": "responseNode",
+        "options": {
+          "binaryPropertyName": "data"
+        }
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        3056,
+        576
+      ],
+      "id": "beeb5327-a349-4b87-9953-9605e842f0b8",
+      "name": "InsertFile-drive",
+      "webhookId": "f9870744-c0e5-422a-9346-036341f2765a"
+    },
+    {
+      "parameters": {
+        "content": "## 1. Setup Inicial (Execute 1x via Webhook)\nCria TODAS as tabelas:\n- document_metadata (Arquivos)\n- document_rows (Linhas Excel/CSV)\n- chat_message (Histórico de Chat)\n- documents (Vetores RAG)",
+        "height": 653,
+        "width": 863,
+        "color": 3
+      },
+      "id": "a8106c26-9051-4a29-a249-0dc3c6b26795",
+      "name": "Sticky Note Setup",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2128,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "DROP TABLE IF EXISTS embaplan_document_rows CASCADE;\nDROP TABLE IF EXISTS embaplan_document_metadata CASCADE;\nDROP TABLE IF EXISTS embaplan_chat_message CASCADE;\n\n-- 1. Tabela de Arquivos\nCREATE TABLE embaplan_document_metadata (\n    id TEXT PRIMARY KEY,\n    title TEXT,\n    url TEXT,\n    created_at TIMESTAMP DEFAULT NOW(),\n    schema TEXT,\n    session_id TEXT\n);\n\n-- 2. Tabela de Linhas (Excel/CSV)\nCREATE TABLE embaplan_document_rows (\n    id SERIAL PRIMARY KEY,\n    dataset_id TEXT REFERENCES embaplan_document_metadata(id) ON DELETE CASCADE,\n    row_data JSONB\n);\n\n-- 3. Tabela de Memória do Chat\nCREATE TABLE embaplan_chat_message (\n    id SERIAL PRIMARY KEY,\n    session_id TEXT NOT NULL,\n    message JSONB NOT NULL,\n    created_at TIMESTAMP DEFAULT NOW()\n);\nCREATE INDEX embaplan_idx_chat_message_session_id ON embaplan_chat_message(session_id);",
+        "options": {}
+      },
+      "id": "e565cf81-c5c3-48dc-baf2-27437be53acb",
+      "name": "Create Standard Tables",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2528,
+        320
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "jFjeYH6Nt3aRNkoM",
+          "name": "Supabase_database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- Habilita extensão vector\nCREATE EXTENSION IF NOT EXISTS vector;\n\n-- 4. Tabela de Vetores (RAG)\nDROP TABLE IF EXISTS embaplan_documents CASCADE;\n\nCREATE TABLE embaplan_documents (\n  id bigserial PRIMARY KEY,\n  content text, \n  metadata jsonb, \n  embedding vector(1536) \n);\n\n-- Função de busca (Match)\nDROP FUNCTION IF EXISTS embaplan_match_documents;\n\nCREATE FUNCTION embaplan_match_documents (\n  query_embedding vector(1536),\n  match_count int DEFAULT NULL,\n  filter jsonb DEFAULT '{}'\n) RETURNS TABLE (\n  id bigint,\n  content text,\n  metadata jsonb,\n  similarity float\n)\nLANGUAGE plpgsql\nAS $$\n#variable_conflict use_column\nBEGIN\n  RETURN QUERY\n  SELECT\n    id,\n    content,\n    metadata,\n    1 - (embaplan_documents.embedding <=> query_embedding) AS similarity\n  FROM embaplan_documents -- CORREÇÃO: alterado de 'documents' para 'embaplan_documents'\n  WHERE metadata @> filter\n  ORDER BY embaplan_documents.embedding <=> query_embedding\n  LIMIT match_count;\nEND;\n$$;",
+        "options": {}
+      },
+      "id": "78305d61-8f59-48e8-a40e-855e405bd382",
+      "name": "Create Vector Table & Functions1",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        2720,
+        320
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "jFjeYH6Nt3aRNkoM",
+          "name": "Supabase_database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- PASSO 1: Criar índices para acelerar a busca (Evita o erro de Timeout)\nCREATE INDEX IF NOT EXISTS aspiramaq_idx_doc_metadata_session \nON aspiramaq_document_metadata(session_id);\n\nCREATE INDEX IF NOT EXISTS aspiramaq_idx_documents_metadata_gin \nON aspiramaq_documents USING GIN (metadata);\n\n-- PASSO 2: Apagar os Vetores (Tabela documents)\n-- Como esta tabela NÃO tem chave estrangeira, precisamos apagar explicitamente\nDELETE FROM aspiramaq_documents \nWHERE metadata->>'session_id' IS NULL;\n\n-- PASSO 3: Apagar os Metadados (Tabela document_metadata)\n-- Isso vai apagar AUTOMATICAMENTE os itens da tabela 'document_rows'\n-- por causa da regra 'ON DELETE CASCADE' que você definiu.\nDELETE FROM aspiramaq_document_metadata \nWHERE session_id IS NULL;",
+        "options": {}
+      },
+      "id": "e371dd93-4f9a-4a37-873f-75d903d618d1",
+      "name": "Delete DRIVE Data Only1",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        3056,
+        320
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "jFjeYH6Nt3aRNkoM",
+          "name": "Supabase_database"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        2304,
+        512
+      ],
+      "id": "808d1a55-e5fa-425d-9ea7-cc4260cce679",
+      "name": "When clicking ‘Execute workflow’"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "10646eae-ae46-4327-a4dc-9987c2d76173",
+              "name": "file_id",
+              "value": "={{ $input.item.json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "f4536df5-d0b1-4392-bf17-b8137fb31a44",
+              "name": "file_type",
+              "value": "={{ $input.item.json.mimeType }}",
+              "type": "string"
+            },
+            {
+              "id": "77d782de-169d-4a46-8a8e-a3831c04d90f",
+              "name": "file_title",
+              "value": "={{ $input.item.json.name }}",
+              "type": "string"
+            },
+            {
+              "id": "9bde4d7f-e4f3-4ebd-9338-dce1350f9eab",
+              "name": "file_url",
+              "value": "={{ $input.item.json.webViewLink }}",
+              "type": "string"
+            },
+            {
+              "id": "d79e06cc-823f-47e6-bfa6-dd2f0cb4264d",
+              "name": "session_id",
+              "value": "={{ $if( $(\"InsertFile-drive\").isExecuted, $(\"InsertFile-drive\").first().json.body.sessionId, null) }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "1b2d29ae-b033-4654-b1f6-5d853a5bd4ad",
+      "name": "Set File ID - to Context",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3712,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "content": "## 3. Limpeza Lenta (Conversas)\nRoda a cada 24h.\nApaga TUDO de sessões antigas (Chat + Docs + Vetores).",
+        "height": 820,
+        "width": 1276,
+        "color": 2
+      },
+      "id": "dc7d307f-4c9e-41f2-853b-c5f1d8b7d722",
+      "name": "Sticky Note Session",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        832,
+        96
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours",
+              "hoursInterval": 10
+            }
+          ]
+        }
+      },
+      "id": "c6364094-be67-45e7-a65f-78f872554013",
+      "name": "24h Trigger (Session)1",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        896,
+        608
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT id \nFROM embaplan_document_metadata \nWHERE session_id IS NOT NULL ",
+        "options": {}
+      },
+      "id": "07f7cffb-8cce-4465-b514-0b7e2f611651",
+      "name": "Get Expired File IDs1",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1168,
+        480
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "jFjeYH6Nt3aRNkoM",
+          "name": "Supabase_database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "ea9cb0c7-b832-4cef-896c-c171ca9a9bae",
+      "name": "Loop Expired Files1",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1584,
+        496
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "deleteFile",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "id": "6b813d17-1a9f-46fe-9a93-41a6a619fcc3",
+      "name": "Delete from Google Drive1",
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1872,
+        608
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "1yxLK6IGIPQiU21B",
+          "name": "Google Drive account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "-- 1. Remove Histórico de Chat Antigo (Removido o '*')\nDELETE FROM embaplan_chat_message;\n\n-- 2. Remove Vetores Antigos\nDELETE FROM aspirapaq_documents \nWHERE embaplan_metadata->>'session_id' IS NOT NULL;\n\n-- 3. Remove Arquivos/Metadados Antigos\nDELETE FROM embaplan_document_metadata \nWHERE session_id IS NOT NULL;",
+        "options": {}
+      },
+      "id": "4b9237b9-9385-45ec-aebe-e06f7ca450e5",
+      "name": "Clean Database Records1",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        1872,
+        400
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "jFjeYH6Nt3aRNkoM",
+          "name": "Supabase_database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "embaplan-DatabaseSetup",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "33979989-59d7-4e1b-b03f-1a4ec549ff75",
+      "name": "Webhook Setup",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        896,
+        336
+      ],
+      "webhookId": "1c70aff4-7d8b-4d00-abd9-0ecda88405ee"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "{\n  \"status\": \"success\",\n  \"message\": \"Documento processado com sucesso! Memória RAG atualizada.\"\n}",
+        "options": {}
+      },
+      "id": "724be7cd-eb14-4b17-af11-196865371ec2",
+      "name": "Confirmar Upload",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        3792,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.all();\n\nfor (const item of data) {\n  // O comando \"Reflect\" força a deleção sem o editor reclamar de Tipos\n  Reflect.deleteProperty(item, 'binary');\n}\n\nreturn data;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6496,
+        512
+      ],
+      "id": "0866f9b8-50d7-401f-b8c4-afefb9aa798f",
+      "name": "Limpar RAM"
+    },
+    {
+      "parameters": {
+        "content": "curl -X POST \"https://exotickoala-n8n.cloudfy.live/webhook-test/index-drive\" \\\n     -H \"Content-Type: multipart/form-data\" \\\n     -F \"data=@\\\"PROPOSTA PSI.PDF\\\"\" \\\n     -F \"tipo=proposta\"",
+        "height": 224,
+        "width": 304
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2608,
+        1088
+      ],
+      "typeVersion": 1,
+      "id": "eb975d50-1a07-43b9-a5c6-b44096e22a5b",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "curl -X POST \"https://exotickoala-n8n.cloudfy.live/webhook-test/index-drive\" -F \"data=@\\\"C:\\Users\\admin\\Downloads\\PROPOSTA PSI.PDF\\\"\" -F \"sessionId=sessao-do-giovani-123\" -F \"tipo=proposta\"",
+        "height": 208,
+        "width": 320
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2944,
+        1104
+      ],
+      "typeVersion": 1,
+      "id": "b596a332-6f8c-4642-a6c9-5f28c0924834",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "bd3e7b3c-f167-4b8c-91c5-e599af4bbd84",
+              "leftValue": "={{ $json.session_id }}",
+              "rightValue": "null",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        4112,
+        512
+      ],
+      "id": "35eba70d-e03c-4558-a4b7-7c55731bbc8c",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT session_id FROM embaplan_document_metadata WHERE id = '{{ $('Set File ID - to Context').item.json.file_id }}'",
+        "options": {}
+      },
+      "id": "c10c47c0-cd80-46df-9a9d-d2b10b5323fe",
+      "name": "Check Session Integrity",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.4,
+      "position": [
+        3904,
+        416
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "jFjeYH6Nt3aRNkoM",
+          "name": "Supabase_database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Acessa os dados de entrada\nconst firstItem = (typeof items !== 'undefined' && items.length > 0) ? items[0] : $input.first();\n\n// 2. Extrai e faz o PARSE do texto JSON\nlet inputData = [];\n\nif (firstItem.json.concatenated_data) {\n    try {\n        // Transformamos o texto \"[{...}]\" em um Array real via JSON.parse\n        inputData = JSON.parse(firstItem.json.concatenated_data);\n    } catch (e) {\n        // Se falhar o parse, tenta usar o json direto caso já seja objeto\n        inputData = firstItem.json.data || [];\n    }\n} else if (Array.isArray(firstItem.json)) {\n    inputData = firstItem.json;\n} else if (firstItem.json.data) {\n    inputData = firstItem.json.data;\n}\n\n// Se o inputData não for uma lista (array), forçamos ser uma lista vazia para não quebrar o loop\nif (!Array.isArray(inputData)) {\n    inputData = []; \n}\n\n// --- INÍCIO DO PROCESSAMENTO ---\n\nconst cleanData = [];\n\nfor (const row of inputData) {\n  // Garante que row é um objeto válido\n  if (typeof row !== 'object' || row === null) continue;\n\n  const cleanItem = {};\n  let textForRag = \"\"; \n\n  // Como os dados já têm as chaves corretas (ex: \"Empresa\", \"CNPJ\"), \n  // iteramos direto sobre elas\n  for (const key in row) {\n    const value = row[key];\n\n    // Verifica se o valor não é nulo, indefinido ou vazio\n    if (value !== undefined && value !== null && value !== '') {\n      cleanItem[key] = value;\n      // Monta o texto para o RAG dinamicamente\n      textForRag += `${key}: ${value}. `;\n    }\n  }\n\n  // Se o objeto não estiver vazio, adiciona a propriedade de texto e insere no array final\n  if (Object.keys(cleanItem).length > 0) {\n    cleanItem.text_for_rag = textForRag.trim();\n    cleanData.push({ json: cleanItem });\n  }\n}\n\nreturn cleanData;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5968,
+        448
+      ],
+      "id": "69daeb43-9535-4c12-9a49-e9b1d5469f9c",
+      "name": "Limpeza Excel"
+    },
+    {
+      "parameters": {
+        "jsCode": "for (const item of $input.all()) {\n  if (item.json.data) {\n    // 1. Remove TUDO que não é letra, número ou pontuação básica (mata binários)\n    let cleanText = item.json.data.replace(/[^\\p{L}\\p{N}\\p{P}\\p{Z}\\n]/gu, '');\n\n    // 2. Remove o erro de Unicode incompleto \\u\n    cleanText = cleanText.replace(/\\\\u/g, '');\n\n    // 3. Limite de segurança: se o \"texto\" for maior que 50k caracteres, \n    // provavelmente é lixo binário de uma imagem que passou\n    item.json.data = cleanText.substring(0, 50000);\n  }\n}\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5968,
+        592
+      ],
+      "id": "3d69bd0b-c365-4c0c-b647-8b13e6e0751a",
+      "name": "Limpeza de Docs"
+    },
+    {
+      "parameters": {
+        "amount": 1
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        6640,
+        512
+      ],
+      "id": "ed1dfe9b-2798-4749-8d27-e5779fb0e060",
+      "name": "Wait",
+      "webhookId": "79b70584-7a14-4c4d-9ce3-6ff01b47128f"
+    },
+    {
+      "parameters": {
+        "amount": 3
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2224,
+        320
+      ],
+      "id": "241fb6d1-7c5f-4a32-961c-1eeafe7c683a",
+      "name": "Wait1",
+      "webhookId": "f18070ac-659f-41e0-9fac-920d996cefad"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "af3fd04e-89dd-4dd9-8726-1ace57d0f4cf",
+              "leftValue": "={{ $json.id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1360,
+        320
+      ],
+      "id": "1f3010c2-b2b1-4a37-8b79-a20f44ada33e",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-embedding-2-preview"
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        5824,
+        912
+      ],
+      "id": "73c57a6b-f241-4b72-8c39-2efc61f0e967",
+      "name": "Embeddings Google Gemini",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "Vx67HOLUDVbPAmHc",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
+      "typeVersion": 1,
+      "position": [
+        5984,
+        912
+      ],
+      "id": "ee0e3cc4-968f-46ac-bbba-157f00bfd3e4",
+      "name": "OpenRouter Chat Model",
+      "credentials": {
+        "openRouterApi": {
+          "id": "hZRBXrfocBn4jbFB",
+          "name": "openrouter_cloudfy"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "upsert",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "embaplan_document_metadata",
+          "mode": "list",
+          "cachedResultName": "embaplan_document_metadata"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $('Set File ID - to Context').item.json.file_id }}",
+            "title": "={{ $('Set File ID - to Context').item.json.file_title }}",
+            "url": "={{ $('Set File ID - to Context').item.json.file_url }}",
+            "session_id": "={{ $('Set File ID - to Context').item.json.session_id }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": true,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "url",
+              "displayName": "url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": false
+            },
+            {
+              "id": "schema",
+              "displayName": "schema",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": true
+            },
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.5,
+      "position": [
+        4640,
+        304
+      ],
+      "id": "b0723f8d-5d9b-4b6c-95e7-aefd7205c074",
+      "name": "Insert Document Metadata1",
+      "executeOnce": true,
+      "credentials": {
+        "postgres": {
+          "id": "jFjeYH6Nt3aRNkoM",
+          "name": "Supabase_database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "model": "text-embedding-3-small",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.embeddingsAzureOpenAi",
+      "typeVersion": 1,
+      "position": [
+        6080,
+        752
+      ],
+      "id": "192aaf73-fdd7-4237-a5d4-01658ccdd7c1",
+      "name": "Embeddings Azure OpenAI",
+      "credentials": {
+        "azureOpenAiApi": {
+          "id": "xby4FSbCaCnssJxl",
+          "name": "Azure Open AI account 3"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Default Data Loader": {
+      "ai_document": [
+        [
+          {
+            "node": "Insert into Supabase Vectorstore",
+            "type": "ai_document",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download File": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Document Text": {
+      "main": [
+        [
+          {
+            "node": "Limpeza de Docs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract PDF Text": {
+      "main": [
+        [
+          {
+            "node": "Limpeza de Docs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Summarize",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Character Text Splitter": {
+      "ai_textSplitter": [
+        [
+          {
+            "node": "Default Data Loader",
+            "type": "ai_textSplitter",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summarize": {
+      "main": [
+        [
+          {
+            "node": "Set Schema",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Limpeza Excel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Extract PDF Text",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract from Excel",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract from CSV",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract Document Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert into Supabase Vectorstore": {
+      "main": [
+        [
+          {
+            "node": "Limpar RAM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from Excel": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Insert Table Rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Schema": {
+      "main": [
+        [
+          {
+            "node": "Update Schema for Document Metadata",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract from CSV": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Insert Table Rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "Confirmar Upload",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set File ID - to Context",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete Old Data Rows": {
+      "main": [
+        [
+          {
+            "node": "Insert Document Metadata1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete Old Doc Rows1": {
+      "main": [
+        [
+          {
+            "node": "Delete Old Data Rows",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "InsertFile-drive": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Standard Tables": {
+      "main": [
+        [
+          {
+            "node": "Create Vector Table & Functions1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Vector Table & Functions1": {
+      "main": [
+        [
+          {
+            "node": "Delete DRIVE Data Only1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete DRIVE Data Only1": {
+      "main": [
+        [
+          {
+            "node": "Search files and folders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When clicking ‘Execute workflow’": {
+      "main": [
+        [
+          {
+            "node": "Create Standard Tables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set File ID - to Context": {
+      "main": [
+        [
+          {
+            "node": "Check Session Integrity",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "24h Trigger (Session)1": {
+      "main": [
+        [
+          {
+            "node": "Get Expired File IDs1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Expired File IDs1": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Expired Files1": {
+      "main": [
+        [
+          {
+            "node": "Clean Database Records1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Delete from Google Drive1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete from Google Drive1": {
+      "main": [
+        [
+          {
+            "node": "Loop Expired Files1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clean Database Records1": {
+      "main": [
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Setup": {
+      "main": [
+        [
+          {
+            "node": "Get Expired File IDs1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limpar RAM": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Delete Old Doc Rows1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Session Integrity": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limpeza Excel": {
+      "main": [
+        [
+          {
+            "node": "Insert into Supabase Vectorstore",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limpeza de Docs": {
+      "main": [
+        [
+          {
+            "node": "Insert into Supabase Vectorstore",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait1": {
+      "main": [
+        [
+          {
+            "node": "Create Standard Tables",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Loop Expired Files1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        []
+      ]
+    },
+    "Insert Document Metadata1": {
+      "main": [
+        [
+          {
+            "node": "Download File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Azure OpenAI": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Insert into Supabase Vectorstore",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "80ac5c09-bfb0-47d2-81d8-28467b5874d5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "03d32a206f2d8840fce482e6c587726f18775bd9177e9401c00ca76d3086ad41"
+  },
+  "id": "OmHEi6EHNBPIGTfK",
+  "tags": []
+}

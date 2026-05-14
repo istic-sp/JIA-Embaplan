@@ -1,0 +1,93 @@
+{
+  "name": "Embaplan-Chat-GET-Sessions",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "embaplan-sessions",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "f4fdcdae-4984-4138-8bc2-ac9f3c09a78a",
+      "name": "When called - GET sessions",
+      "position": [
+        -160,
+        112
+      ],
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "webhookId": "d433b917-387e-4aff-adeb-78cd81421956"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n  session_id, \n  MIN(created_at) as data_inicio,\n  (SELECT message->>'content' -- Extrai apenas o texto da mensagem\n   FROM embaplan_chat_message embaplan_cm2 \n   WHERE embaplan_cm2.session_id = embaplan_cm.session_id \n   AND embaplan_cm2.message->>'type' = 'human' -- Filtra dentro do JSON da coluna 'message'\n   ORDER BY id DESC LIMIT 1) as titulo\nFROM embaplan_chat_message embaplan_cm\nGROUP BY session_id\nORDER BY data_inicio DESC;",
+        "options": {}
+      },
+      "id": "abf1f152-8e4b-4a56-afee-8538e50d2ba5",
+      "name": "List Sessions from DB",
+      "position": [
+        64,
+        112
+      ],
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "credentials": {
+        "postgres": {
+          "id": "jFjeYH6Nt3aRNkoM",
+          "name": "Supabase_database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "id": "b63ab8b2-9389-4779-bb11-93e3dab3707d",
+      "name": "Return Sessions",
+      "position": [
+        288,
+        112
+      ],
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When called - GET sessions": {
+      "main": [
+        [
+          {
+            "node": "List Sessions from DB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List Sessions from DB": {
+      "main": [
+        [
+          {
+            "node": "Return Sessions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "c6fcf1a1-97bf-44d5-9bda-fe4d4875656d",
+  "meta": {
+    "instanceId": "03d32a206f2d8840fce482e6c587726f18775bd9177e9401c00ca76d3086ad41"
+  },
+  "id": "wZhKeSRhaLy20BOX",
+  "tags": []
+}
