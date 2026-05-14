@@ -3485,10 +3485,16 @@
         // Strip markdown heading prefixes and numbered list prefixes (e.g. "## 1) ", "**2.**", "3) ") from product/pending lines so regexes match
         parsedContent = parsedContent.replace(
           /^[ \t]*(?:#{1,3}\s*)?(?:\*\*|__)?\s*\d+\s*[.)\-:]\s*(?:\*\*|__)?\s*(📦\s)/gm,
-          "$1"
+          "$1",
         );
-        parsedContent = parsedContent.replace(/^[ \t]*(#{1,3})\s+(📦\s)/gm, "$2");
-        parsedContent = parsedContent.replace(/^[ \t]*(#{1,3})\s+(⏳\s)/gm, "$2");
+        parsedContent = parsedContent.replace(
+          /^[ \t]*(#{1,3})\s+(📦\s)/gm,
+          "$2",
+        );
+        parsedContent = parsedContent.replace(
+          /^[ \t]*(#{1,3})\s+(⏳\s)/gm,
+          "$2",
+        );
 
         if (
           parsedContent.includes("📦") &&
@@ -3503,10 +3509,13 @@
             let introText = parsedContent.substring(0, firstProductIdx).trim();
             parsedContent = parsedContent.substring(firstProductIdx);
             // Strip stray numbered product headers from intro (e.g. "# 1) BASE A4")
-            introText = introText.replace(
-              /(^|\n)[ \t]*(?:#{1,6}[ \t]+|\*\*[ \t]*)\d+\)[ \t]+[^\n]{1,80}?(?:[ \t]*\*\*)?[ \t]*(?=\n|$)/g,
-              "$1",
-            ).replace(/\n{3,}/g, "\n\n").trim();
+            introText = introText
+              .replace(
+                /(^|\n)[ \t]*(?:#{1,6}[ \t]+|\*\*[ \t]*)\d+\)[ \t]+[^\n]{1,80}?(?:[ \t]*\*\*)?[ \t]*(?=\n|$)/g,
+                "$1",
+              )
+              .replace(/\n{3,}/g, "\n\n")
+              .trim();
             if (introText.length > 10) {
               introHtml =
                 '<div class="intro-box">' + marked.parse(introText) + "</div>";
@@ -4028,8 +4037,8 @@
           titleEl.textContent = "Resetar Memória RAG";
           textEl.innerHTML =
             "Isso reprocessará os documentos do agente.<br><br>" +
-            "<label style=\"display:flex; align-items:center; gap:8px; cursor:pointer; font-size:14px;\">" +
-            "<input type=\"checkbox\" id=\"resetDeleteConversations\" style=\"width:16px; height:16px; cursor:pointer;\" />" +
+            '<label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-size:14px;">' +
+            '<input type="checkbox" id="resetDeleteConversations" style="width:16px; height:16px; cursor:pointer;" />' +
             "<span>Também apagar histórico de conversas</span>" +
             "</label>";
           confirmBtn.textContent = "Resetar";
@@ -4038,8 +4047,7 @@
           pendingAction = "uploadSheet";
           pendingUploadFile = payload;
           titleEl.textContent = "Atualizar planilha oficial";
-          textEl.innerHTML =
-            `Substituir a planilha oficial de anúncios pelo arquivo <strong>“${payload.name}”</strong>?<br><br>Isso afetará as próximas análises do Agente IA.`;
+          textEl.innerHTML = `Substituir a planilha oficial de anúncios pelo arquivo <strong>“${payload.name}”</strong>?<br><br>Isso afetará as próximas análises do Agente IA.`;
           confirmBtn.textContent = "Enviar e Substituir";
           confirmBtn.style.background = "#2563eb";
         }
@@ -4159,10 +4167,16 @@
               const txt = await response.text().catch(() => "");
               throw new Error(txt || `HTTP ${response.status}`);
             }
-            setStatus(`Planilha "${file.name}" atualizada com sucesso.`, "success");
+            setStatus(
+              `Planilha "${file.name}" atualizada com sucesso.`,
+              "success",
+            );
           } catch (err) {
             console.error("Sheet upload error:", err);
-            setStatus(`Falha ao atualizar planilha: ${err.message || err}`, "error");
+            setStatus(
+              `Falha ao atualizar planilha: ${err.message || err}`,
+              "error",
+            );
           } finally {
             elements.uploadSheetBtn.disabled = false;
             elements.uploadSheetBtn.innerHTML = origLabel;
