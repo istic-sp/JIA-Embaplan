@@ -1,5 +1,4 @@
 {
-  "name": "Embaplan - RAG",
   "nodes": [
     {
       "parameters": {
@@ -20,13 +19,13 @@
           }
         }
       },
-      "id": "335800c4-da05-4383-ac18-f3def1d98bd4",
+      "id": "3f2e2149-89a4-4bca-88fb-fd73135db514",
       "name": "Default Data Loader",
       "type": "@n8n/n8n-nodes-langchain.documentDefaultDataLoader",
       "typeVersion": 1,
       "position": [
-        6240,
-        720
+        23248,
+        3088
       ]
     },
     {
@@ -36,13 +35,13 @@
         "width": 3809,
         "color": 5
       },
-      "id": "496c3e46-dac4-4695-b7df-285047a185f0",
+      "id": "0b010bc9-b497-4ff2-8698-2f084f9926ea",
       "name": "Sticky Note1",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        3008,
-        80
+        20016,
+        2448
       ]
     },
     {
@@ -61,13 +60,13 @@
           }
         }
       },
-      "id": "ed9fffce-ec7e-4548-a5c3-ca0baa5889c8",
+      "id": "be47d763-b4b0-4dfa-b130-313b5e3116a8",
       "name": "Download File",
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
       "position": [
-        4832,
-        448
+        21840,
+        2816
       ],
       "executeOnce": true,
       "retryOnFail": true,
@@ -84,13 +83,13 @@
         "operation": "text",
         "options": {}
       },
-      "id": "1c018957-f548-457f-bc62-c98ee80fa443",
+      "id": "a28773e5-8893-4095-b4a2-4ba32fcd51ef",
       "name": "Extract Document Text",
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1,
       "position": [
-        5504,
-        752
+        22512,
+        3120
       ],
       "alwaysOutputData": true
     },
@@ -99,13 +98,13 @@
         "operation": "pdf",
         "options": {}
       },
-      "id": "e491f5b7-6bbe-4ce9-8732-871f1305d285",
+      "id": "dd3f8382-d10d-40d7-9a99-833e97f3c5e7",
       "name": "Extract PDF Text",
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1,
       "position": [
-        5504,
-        192
+        22512,
+        2560
       ]
     },
     {
@@ -113,24 +112,24 @@
         "aggregate": "aggregateAllItemData",
         "options": {}
       },
-      "id": "765ee9fa-bfac-4176-ba0c-66e7f259ecc8",
+      "id": "2172f262-92f3-4268-8dcf-ae48fbdde562",
       "name": "Aggregate",
       "type": "n8n-nodes-base.aggregate",
       "typeVersion": 1,
       "position": [
-        5536,
-        368
+        22544,
+        2736
       ]
     },
     {
       "parameters": {},
-      "id": "ef3a96ab-bed9-470e-ab9f-d0eb48c37218",
+      "id": "bbbb2c88-7935-4525-9395-61e67cf40031",
       "name": "Character Text Splitter",
       "type": "@n8n/n8n-nodes-langchain.textSplitterCharacterTextSplitter",
       "typeVersion": 1,
       "position": [
-        6208,
-        864
+        23216,
+        3232
       ]
     },
     {
@@ -145,13 +144,13 @@
         },
         "options": {}
       },
-      "id": "490ee353-548c-464c-a52c-d931c32edc69",
+      "id": "5859f642-d245-4a74-8c81-704c8c16170a",
       "name": "Summarize",
       "type": "n8n-nodes-base.summarize",
       "typeVersion": 1,
       "position": [
-        5744,
-        448
+        22752,
+        2816
       ]
     },
     {
@@ -254,13 +253,13 @@
           "fallbackOutput": 3
         }
       },
-      "id": "d6fe2f20-279d-4a85-bb11-c027f6a39bc9",
+      "id": "5e6e8558-7818-4ee6-815d-11222ff8b8aa",
       "name": "Switch",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3,
       "position": [
-        5008,
-        416
+        22016,
+        2784
       ]
     },
     {
@@ -273,16 +272,16 @@
           "cachedResultName": "embaplan_documents"
         },
         "options": {
-          "queryName": "match_documents"
+          "queryName": "embaplan_match_documents"
         }
       },
-      "id": "da2bc9c0-d88d-4bd7-b327-83e64fa801fe",
+      "id": "a86f2a0f-cdd6-4ffd-ad12-0638c4c4cd57",
       "name": "Insert into Supabase Vectorstore",
       "type": "@n8n/n8n-nodes-langchain.vectorStoreSupabase",
       "typeVersion": 1,
       "position": [
-        6224,
-        512
+        23232,
+        2880
       ],
       "credentials": {
         "supabaseApi": {
@@ -296,13 +295,13 @@
         "operation": "xlsx",
         "options": {}
       },
-      "id": "569f5f94-cac9-4e42-b3c2-4802d7e0d189",
+      "id": "50a3538b-c2f9-4f6e-9d82-60cb6a41d145",
       "name": "Extract from Excel",
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1,
       "position": [
-        5328,
-        368
+        22336,
+        2736
       ]
     },
     {
@@ -328,10 +327,10 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        5984,
-        240
+        22992,
+        2608
       ],
-      "id": "c48caa32-a9a3-4987-be82-3bd79895c39b",
+      "id": "41fc4715-9182-4a65-a2ab-bbd5537a1afa",
       "name": "Set Schema"
     },
     {
@@ -341,10 +340,10 @@
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1,
       "position": [
-        5328,
-        544
+        22336,
+        2912
       ],
-      "id": "57b0e923-2c97-4bf2-b015-14d6b891e66b",
+      "id": "32d226f2-cdc2-4f87-a116-dd86cdeb553c",
       "name": "Extract from CSV"
     },
     {
@@ -356,10 +355,10 @@
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        3456,
-        400
+        20464,
+        2768
       ],
-      "id": "735c41e4-9cf8-4638-941e-9ab4b540ed66",
+      "id": "ad8d2842-101d-4d58-9857-06334eb73fb8",
       "name": "Loop Over Items"
     },
     {
@@ -379,10 +378,10 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        4464,
-        544
+        21472,
+        2912
       ],
-      "id": "9dfe8457-11fc-446f-b117-d2287186bc0d",
+      "id": "71359cdd-0420-4ad5-902a-0ffff6622c92",
       "name": "Delete Old Data Rows",
       "alwaysOutputData": true,
       "executeOnce": true,
@@ -453,10 +452,10 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
       "position": [
-        5536,
-        544
+        22544,
+        2912
       ],
-      "id": "2bd14796-8b0f-4780-8967-74cae764fa12",
+      "id": "0933ed15-8ef5-4518-b0c2-41a853c1577f",
       "name": "Insert Table Rows",
       "credentials": {
         "postgres": {
@@ -547,10 +546,10 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
       "position": [
-        6208,
-        240
+        23216,
+        2608
       ],
-      "id": "c40e4513-5b04-43b9-9cf9-26b8f5dbaf88",
+      "id": "0195288a-6e2c-4b93-a5a3-88553d5c8d6e",
       "name": "Update Schema for Document Metadata",
       "credentials": {
         "postgres": {
@@ -568,11 +567,11 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        272,
-        80
+        17280,
+        2448
       ],
       "typeVersion": 1,
-      "id": "f6ffa777-79a9-4155-9525-3cefd724f45b",
+      "id": "c79a9a35-9c73-4a82-9129-6840e5ab1d84",
       "name": "Sticky Note9"
     },
     {
@@ -595,10 +594,10 @@
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
       "position": [
-        3248,
-        320
+        20256,
+        2688
       ],
-      "id": "23af34b8-a584-4ea9-a370-f53c553c77cf",
+      "id": "fa94e4cd-83d4-43d3-9425-f9dea658ceab",
       "name": "Search files and folders",
       "retryOnFail": true,
       "maxTries": 2,
@@ -618,10 +617,10 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        4272,
-        288
+        21280,
+        2656
       ],
-      "id": "2e19b8a5-c915-4518-9525-19e03f621b94",
+      "id": "5a9a92f0-add8-4192-ad35-d0b8b4aa8954",
       "name": "Delete Old Doc Rows1",
       "credentials": {
         "postgres": {
@@ -649,10 +648,10 @@
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
       "position": [
-        3232,
-        576
+        20240,
+        2944
       ],
-      "id": "d2f56677-69cf-4011-be1f-8c406d7f17f1",
+      "id": "6dfc9fa1-8484-426e-b0c2-1222658db09f",
       "name": "Upload file",
       "credentials": {
         "googleDriveOAuth2Api": {
@@ -673,10 +672,10 @@
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "position": [
-        3056,
-        576
+        20064,
+        2944
       ],
-      "id": "beeb5327-a349-4b87-9953-9605e842f0b8",
+      "id": "4bbbd174-ac5c-404d-a865-b8a4be1039be",
       "name": "InsertFile-drive",
       "webhookId": "f9870744-c0e5-422a-9346-036341f2765a"
     },
@@ -687,28 +686,28 @@
         "width": 863,
         "color": 3
       },
-      "id": "a8106c26-9051-4a29-a249-0dc3c6b26795",
+      "id": "5c69f159-5854-4755-86cb-b22780182b8c",
       "name": "Sticky Note Setup",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        2128,
-        96
+        19136,
+        2464
       ]
     },
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "DROP TABLE IF EXISTS embaplan_document_rows CASCADE;\nDROP TABLE IF EXISTS embaplan_document_metadata CASCADE;\n\n-- 1. Tabela de Arquivos\nCREATE TABLE embaplan_document_metadata (\n    id TEXT PRIMARY KEY,\n    title TEXT,\n    url TEXT,\n    created_at TIMESTAMP DEFAULT NOW(),\n    schema TEXT,\n    session_id TEXT\n);\n\n-- 2. Tabela de Linhas (Excel/CSV)\nCREATE TABLE embaplan_document_rows (\n    id SERIAL PRIMARY KEY,\n    dataset_id TEXT REFERENCES embaplan_document_metadata(id) ON DELETE CASCADE,\n    row_data JSONB\n);\n\n-- 3. Tabela de Mem\u00f3ria do Chat (NUNCA derrubada aqui \u2014 preserva hist\u00f3rico)\n--    A limpeza condicional acontece em \"Clean Database Records1\".\nCREATE TABLE IF NOT EXISTS embaplan_chat_message (\n    id SERIAL PRIMARY KEY,\n    session_id TEXT NOT NULL,\n    message JSONB NOT NULL,\n    created_at TIMESTAMP DEFAULT NOW()\n);\nCREATE INDEX IF NOT EXISTS embaplan_idx_chat_message_session_id ON embaplan_chat_message(session_id);",
+        "query": "DROP TABLE IF EXISTS embaplan_document_rows CASCADE;\nDROP TABLE IF EXISTS embaplan_document_metadata CASCADE;\n\n-- 1. Tabela de Arquivos\nCREATE TABLE embaplan_document_metadata (\n    id TEXT PRIMARY KEY,\n    title TEXT,\n    url TEXT,\n    created_at TIMESTAMP DEFAULT NOW(),\n    schema TEXT,\n    session_id TEXT\n);\n\n-- 2. Tabela de Linhas (Excel/CSV)\nCREATE TABLE embaplan_document_rows (\n    id SERIAL PRIMARY KEY,\n    dataset_id TEXT REFERENCES embaplan_document_metadata(id) ON DELETE CASCADE,\n    row_data JSONB\n);\n\n-- 3. Tabela de Memória do Chat (NUNCA derrubada aqui — preserva histórico)\n--    A limpeza condicional acontece em \"Clean Database Records1\".\nCREATE TABLE IF NOT EXISTS embaplan_chat_message (\n    id SERIAL PRIMARY KEY,\n    session_id TEXT NOT NULL,\n    message JSONB NOT NULL,\n    created_at TIMESTAMP DEFAULT NOW()\n);\nCREATE INDEX IF NOT EXISTS embaplan_idx_chat_message_session_id ON embaplan_chat_message(session_id);",
         "options": {}
       },
-      "id": "e565cf81-c5c3-48dc-baf2-27437be53acb",
+      "id": "9e39c33b-cbc5-40a9-aa53-9369f92ce5e2",
       "name": "Create Standard Tables",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
       "position": [
-        2528,
-        320
+        19536,
+        2688
       ],
       "credentials": {
         "postgres": {
@@ -723,13 +722,13 @@
         "query": "-- Habilita extensão vector\nCREATE EXTENSION IF NOT EXISTS vector;\n\n-- 4. Tabela de Vetores (RAG)\nDROP TABLE IF EXISTS embaplan_documents CASCADE;\n\nCREATE TABLE embaplan_documents (\n  id bigserial PRIMARY KEY,\n  content text, \n  metadata jsonb, \n  embedding vector(1536) \n);\n\n-- Função de busca (Match)\nDROP FUNCTION IF EXISTS embaplan_match_documents;\n\nCREATE FUNCTION embaplan_match_documents (\n  query_embedding vector(1536),\n  match_count int DEFAULT NULL,\n  filter jsonb DEFAULT '{}'\n) RETURNS TABLE (\n  id bigint,\n  content text,\n  metadata jsonb,\n  similarity float\n)\nLANGUAGE plpgsql\nAS $$\n#variable_conflict use_column\nBEGIN\n  RETURN QUERY\n  SELECT\n    id,\n    content,\n    metadata,\n    1 - (embaplan_documents.embedding <=> query_embedding) AS similarity\n  FROM embaplan_documents -- CORREÇÃO: alterado de 'documents' para 'embaplan_documents'\n  WHERE metadata @> filter\n  ORDER BY embaplan_documents.embedding <=> query_embedding\n  LIMIT match_count;\nEND;\n$$;",
         "options": {}
       },
-      "id": "78305d61-8f59-48e8-a40e-855e405bd382",
+      "id": "5852a24c-a9a8-4ec0-a91c-0f764f28b151",
       "name": "Create Vector Table & Functions1",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
       "position": [
-        2720,
-        320
+        19728,
+        2688
       ],
       "credentials": {
         "postgres": {
@@ -744,13 +743,13 @@
         "query": "-- PASSO 1: Criar índices para acelerar a busca (Evita o erro de Timeout)\nCREATE INDEX IF NOT EXISTS embaplan_idx_doc_metadata_session \nON embaplan_document_metadata(session_id);\n\nCREATE INDEX IF NOT EXISTS embaplan_idx_documents_metadata_gin \nON embaplan_documents USING GIN (metadata);\n\n-- PASSO 2: Apagar os Vetores (Tabela documents)\n-- Como esta tabela NÃO tem chave estrangeira, precisamos apagar explicitamente\nDELETE FROM embaplan_documents \nWHERE metadata->>'session_id' IS NULL;\n\n-- PASSO 3: Apagar os Metadados (Tabela document_metadata)\n-- Isso vai apagar AUTOMATICAMENTE os itens da tabela 'document_rows'\n-- por causa da regra 'ON DELETE CASCADE' que você definiu.\nDELETE FROM embaplan_document_metadata \nWHERE session_id IS NULL;",
         "options": {}
       },
-      "id": "e371dd93-4f9a-4a37-873f-75d903d618d1",
+      "id": "9dc5b0d5-0ac9-4c0e-b344-5f8a56a1b471",
       "name": "Delete DRIVE Data Only1",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
       "position": [
-        3056,
-        320
+        20064,
+        2688
       ],
       "credentials": {
         "postgres": {
@@ -764,10 +763,10 @@
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
       "position": [
-        2304,
-        512
+        19312,
+        2880
       ],
-      "id": "808d1a55-e5fa-425d-9ea7-cc4260cce679",
+      "id": "7fc0cf9e-6dbf-4a48-b1d8-a590b98b1f33",
       "name": "When clicking ‘Execute workflow’"
     },
     {
@@ -808,13 +807,13 @@
         },
         "options": {}
       },
-      "id": "1b2d29ae-b033-4654-b1f6-5d853a5bd4ad",
+      "id": "96ffad28-b1f9-4edd-916b-3bd8c1c1504a",
       "name": "Set File ID - to Context",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
-        3712,
-        416
+        20720,
+        2784
       ]
     },
     {
@@ -824,13 +823,13 @@
         "width": 1276,
         "color": 2
       },
-      "id": "dc7d307f-4c9e-41f2-853b-c5f1d8b7d722",
+      "id": "9de26583-edb0-493a-a506-d33e1d4ae7a0",
       "name": "Sticky Note Session",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        832,
-        96
+        17840,
+        2464
       ]
     },
     {
@@ -844,13 +843,13 @@
           ]
         }
       },
-      "id": "c6364094-be67-45e7-a65f-78f872554013",
+      "id": "43ef0b2b-697c-4fcb-9364-eaef54f66612",
       "name": "24h Trigger (Session)1",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.3,
       "position": [
-        896,
-        608
+        17904,
+        2976
       ]
     },
     {
@@ -859,13 +858,13 @@
         "query": "SELECT id \nFROM embaplan_document_metadata \nWHERE session_id IS NOT NULL ",
         "options": {}
       },
-      "id": "07f7cffb-8cce-4465-b514-0b7e2f611651",
+      "id": "a8f546cb-0e85-4d08-bd99-a4b138158018",
       "name": "Get Expired File IDs1",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
       "position": [
-        1168,
-        480
+        18176,
+        2848
       ],
       "alwaysOutputData": true,
       "credentials": {
@@ -879,13 +878,13 @@
       "parameters": {
         "options": {}
       },
-      "id": "ea9cb0c7-b832-4cef-896c-c171ca9a9bae",
+      "id": "148f80c7-5c54-402f-a0b6-40868020178b",
       "name": "Loop Expired Files1",
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        1584,
-        496
+        18592,
+        2864
       ]
     },
     {
@@ -898,13 +897,13 @@
         },
         "options": {}
       },
-      "id": "6b813d17-1a9f-46fe-9a93-41a6a619fcc3",
+      "id": "6ff21a37-bb36-49d3-bf51-84807793bc2e",
       "name": "Delete from Google Drive1",
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
       "position": [
-        1872,
-        608
+        18880,
+        2976
       ],
       "credentials": {
         "googleDriveOAuth2Api": {
@@ -917,16 +916,16 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "=-- 1. Hist\u00f3rico de chat (3 cen\u00e1rios):\n--    \u2022 Bot\u00e3o Resetar com checkbox DESMARCADO (keepConversations=true) \u2192 preserva tudo.\n--    \u2022 Bot\u00e3o Resetar com checkbox MARCADO (keepConversations=false) \u2192 apaga TODAS as conversas.\n--    \u2022 Trigger agendado 24h (sem Webhook Setup) \u2192 apaga apenas chats das sess\u00f5es expiradas.\n{{ (() => { try { const body = $('Webhook Setup').item.json.body || {}; return body.keepConversations === true ? 'PRESERVE' : 'DELETE_ALL'; } catch (e) { return 'DELETE_EXPIRED'; } })() === 'PRESERVE' ? '-- Conversas preservadas a pedido do usu\u00e1rio' : ((() => { try { return $('Webhook Setup').item.json.body && $('Webhook Setup').item.json.body.keepConversations === false; } catch (e) { return false; } })() ? 'DELETE FROM embaplan_chat_message;' : 'DELETE FROM embaplan_chat_message WHERE session_id IN (SELECT session_id FROM embaplan_document_metadata WHERE session_id IS NOT NULL);') }}\n\n-- 2. Remove Vetores Antigos\nDELETE FROM embaplan_documents \nWHERE metadata->>'session_id' IS NOT NULL;\n\n-- 3. Remove Arquivos/Metadados Antigos\nDELETE FROM embaplan_document_metadata \nWHERE session_id IS NOT NULL;",
+        "query": "=-- 1. Histórico de chat (3 cenários):\n--    • Botão Resetar com checkbox DESMARCADO (keepConversations=true) → preserva tudo.\n--    • Botão Resetar com checkbox MARCADO (keepConversations=false) → apaga TODAS as conversas.\n--    • Trigger agendado 24h (sem Webhook Setup) → apaga apenas chats das sessões expiradas.\n{{ (() => { try { const body = $('Webhook Setup').item.json.body || {}; return body.keepConversations === true ? 'PRESERVE' : 'DELETE_ALL'; } catch (e) { return 'DELETE_EXPIRED'; } })() === 'PRESERVE' ? '-- Conversas preservadas a pedido do usuário' : ((() => { try { return $('Webhook Setup').item.json.body && $('Webhook Setup').item.json.body.keepConversations === false; } catch (e) { return false; } })() ? 'DELETE FROM embaplan_chat_message;' : 'DELETE FROM embaplan_chat_message WHERE session_id IN (SELECT session_id FROM embaplan_document_metadata WHERE session_id IS NOT NULL);') }}\n\n-- 2. Remove Vetores Antigos\nDELETE FROM embaplan_documents \nWHERE metadata->>'session_id' IS NOT NULL;\n\n-- 3. Remove Arquivos/Metadados Antigos\nDELETE FROM embaplan_document_metadata \nWHERE session_id IS NOT NULL;",
         "options": {}
       },
-      "id": "4b9237b9-9385-45ec-aebe-e06f7ca450e5",
+      "id": "f9154c26-103c-4c33-a738-c4ad46bd94c9",
       "name": "Clean Database Records1",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
       "position": [
-        1872,
-        400
+        18880,
+        2768
       ],
       "alwaysOutputData": true,
       "credentials": {
@@ -943,13 +942,13 @@
         "responseMode": "responseNode",
         "options": {}
       },
-      "id": "33979989-59d7-4e1b-b03f-1a4ec549ff75",
+      "id": "3c19de53-686a-4f92-9ed0-4b19adb94738",
       "name": "Webhook Setup",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2,
       "position": [
-        896,
-        336
+        17904,
+        2704
       ],
       "webhookId": "1c70aff4-7d8b-4d00-abd9-0ecda88405ee"
     },
@@ -959,13 +958,13 @@
         "responseBody": "{\n  \"status\": \"success\",\n  \"message\": \"Documento processado com sucesso! Memória RAG atualizada.\"\n}",
         "options": {}
       },
-      "id": "724be7cd-eb14-4b17-af11-196865371ec2",
+      "id": "6fb93ca2-e14e-413c-a874-e2198bb461c1",
       "name": "Confirmar Upload",
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.1,
       "position": [
-        3792,
-        160
+        20800,
+        2528
       ]
     },
     {
@@ -975,10 +974,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        6496,
-        512
+        23504,
+        2880
       ],
-      "id": "0866f9b8-50d7-401f-b8c4-afefb9aa798f",
+      "id": "005767c8-a74a-4a0f-9ba2-d7a9d8e38d9c",
       "name": "Limpar RAM"
     },
     {
@@ -989,11 +988,11 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        2608,
-        1088
+        19616,
+        3456
       ],
       "typeVersion": 1,
-      "id": "eb975d50-1a07-43b9-a5c6-b44096e22a5b",
+      "id": "7bd75a37-9b21-4aea-9503-c84673d146ce",
       "name": "Sticky Note4"
     },
     {
@@ -1004,11 +1003,11 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "position": [
-        2944,
-        1104
+        19952,
+        3472
       ],
       "typeVersion": 1,
-      "id": "b596a332-6f8c-4642-a6c9-5f28c0924834",
+      "id": "04d0b19e-b23d-4304-a9d7-bf45bd013d29",
       "name": "Sticky Note6"
     },
     {
@@ -1039,10 +1038,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        4112,
-        512
+        21120,
+        2880
       ],
-      "id": "35eba70d-e03c-4558-a4b7-7c55731bbc8c",
+      "id": "51610b73-3f54-42f7-830f-43e648bafe01",
       "name": "If"
     },
     {
@@ -1051,13 +1050,13 @@
         "query": "SELECT session_id FROM embaplan_document_metadata WHERE id = '{{ $('Set File ID - to Context').item.json.file_id }}'",
         "options": {}
       },
-      "id": "c10c47c0-cd80-46df-9a9d-d2b10b5323fe",
+      "id": "14bb5104-9a43-408c-8bde-fe53406fb645",
       "name": "Check Session Integrity",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.4,
       "position": [
-        3904,
-        416
+        20912,
+        2784
       ],
       "alwaysOutputData": true,
       "credentials": {
@@ -1074,10 +1073,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5968,
-        448
+        22976,
+        2816
       ],
-      "id": "69daeb43-9535-4c12-9a49-e9b1d5469f9c",
+      "id": "c825d776-d9d1-4a08-94b1-338333c97002",
       "name": "Limpeza Excel"
     },
     {
@@ -1087,10 +1086,10 @@
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        5968,
-        592
+        22976,
+        2960
       ],
-      "id": "3d69bd0b-c365-4c0c-b647-8b13e6e0751a",
+      "id": "7f9deb25-324c-464a-a066-3247b8e87e74",
       "name": "Limpeza de Docs"
     },
     {
@@ -1100,10 +1099,10 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        6640,
-        512
+        23648,
+        2880
       ],
-      "id": "ed1dfe9b-2798-4749-8d27-e5779fb0e060",
+      "id": "385be2c0-60e0-44d4-9f7e-73dd257d9832",
       "name": "Wait",
       "webhookId": "79b70584-7a14-4c4d-9ce3-6ff01b47128f"
     },
@@ -1114,10 +1113,10 @@
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
       "position": [
-        2224,
-        320
+        19232,
+        2688
       ],
-      "id": "241fb6d1-7c5f-4a32-961c-1eeafe7c683a",
+      "id": "440a8596-5fa0-48a4-979d-95e6429d8d15",
       "name": "Wait1",
       "webhookId": "f18070ac-659f-41e0-9fac-920d996cefad"
     },
@@ -1149,10 +1148,10 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        1360,
-        320
+        18368,
+        2688
       ],
-      "id": "1f3010c2-b2b1-4a37-8b79-a20f44ada33e",
+      "id": "548f86e1-9b50-4a74-9785-f78c358669b8",
       "name": "If1"
     },
     {
@@ -1162,10 +1161,10 @@
       "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
       "typeVersion": 1,
       "position": [
-        5824,
-        912
+        22832,
+        3280
       ],
-      "id": "73c57a6b-f241-4b72-8c39-2efc61f0e967",
+      "id": "514cfc31-9b2f-4fc6-8581-3eeb94be344f",
       "name": "Embeddings Google Gemini",
       "credentials": {
         "googlePalmApi": {
@@ -1181,10 +1180,10 @@
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenRouter",
       "typeVersion": 1,
       "position": [
-        5984,
-        912
+        22992,
+        3280
       ],
-      "id": "ee0e3cc4-968f-46ac-bbba-157f00bfd3e4",
+      "id": "d0cd9638-c575-49fc-b2e8-b310f361b5fd",
       "name": "OpenRouter Chat Model",
       "credentials": {
         "openRouterApi": {
@@ -1286,10 +1285,10 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.5,
       "position": [
-        4640,
-        304
+        21648,
+        2672
       ],
-      "id": "b0723f8d-5d9b-4b6c-95e7-aefd7205c074",
+      "id": "3e676068-6a01-4438-835e-8f137d9d13fd",
       "name": "Insert Document Metadata1",
       "executeOnce": true,
       "credentials": {
@@ -1307,10 +1306,10 @@
       "type": "@n8n/n8n-nodes-langchain.embeddingsAzureOpenAi",
       "typeVersion": 1,
       "position": [
-        6080,
-        752
+        23088,
+        3120
       ],
-      "id": "192aaf73-fdd7-4237-a5d4-01658ccdd7c1",
+      "id": "91f7b744-63c7-4203-ba9e-442af1bdf831",
       "name": "Embeddings Azure OpenAI",
       "credentials": {
         "azureOpenAiApi": {
@@ -1320,7 +1319,6 @@
       }
     }
   ],
-  "pinData": {},
   "connections": {
     "Default Data Loader": {
       "ai_document": [
@@ -1793,11 +1791,6 @@
         ]
       ]
     },
-    "Embeddings Google Gemini": {
-      "ai_embedding": [
-        []
-      ]
-    },
     "Insert Document Metadata1": {
       "main": [
         [
@@ -1821,17 +1814,9 @@
       ]
     }
   },
-  "active": true,
-  "settings": {
-    "executionOrder": "v1",
-    "binaryMode": "separate",
-    "availableInMCP": false
-  },
-  "versionId": "80ac5c09-bfb0-47d2-81d8-28467b5874d5",
+  "pinData": {},
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "03d32a206f2d8840fce482e6c587726f18775bd9177e9401c00ca76d3086ad41"
-  },
-  "id": "OmHEi6EHNBPIGTfK",
-  "tags": []
+  }
 }
