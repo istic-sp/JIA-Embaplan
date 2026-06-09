@@ -1,0 +1,183 @@
+{
+  "name": "Embaplan - Recomendações IA",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 🤖 Recomendações geradas por IA\n\nWorkflow DEDICADO que gera recomendações de otimização para um anúncio usando IA — **sem depender do chat**. As sugestões são gravadas direto no banco (origem='agente') e aparecem na aba *Recomendações* do front.\n\n**Endpoint:** `POST /webhook/embaplan-generate-recommendations`\n**Body:** `{ \"anuncio_indice\": \"L2#47\", \"user_id\": \"<uuid?>\", \"foco\": \"opcional: ex. reduzir ACOS\" }`\n\n### Fluxo\n1. *Contexto (RPC)* lê o estado atual + linha do tempo + recomendações existentes via `sameka_embaplan_ad_context_for_ai`.\n2. *Montar Prompt* monta o briefing para a IA (fonte única de verdade — sem inventar números).\n3. *Gerar Recomendações (IA)* devolve um array JSON estrito.\n4. *Validar JSON* sanitiza/normaliza.\n5. *Salvar Recs (RPC)* grava via `sameka_embaplan_add_agent_recommendations` (com dedup).\n\n### ⚙️ Antes de ativar\n1. Rode a migration `014_ai_recommendations.sql` (além de 008–010).\n2. Nós `*(RPC)`: credencial **Postgres** `Supabase_database`.\n3. Nó *Azure OpenAI Chat Model*: MESMA estrutura/credencial do agente (`Azure Open AI account 3`, modelo `gpt-5.4-mini`). Para usar Gemini, basta conectar o *Google Gemini Chat Model* na entrada de modelo.",
+        "height": 360,
+        "width": 520,
+        "color": 4
+      },
+      "id": "b1000000-0000-4000-8000-000000000001",
+      "name": "Sticky Note",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-40, -120]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "embaplan-generate-recommendations",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [-40, 320],
+      "id": "b1000000-0000-4000-8000-000000000002",
+      "name": "Webhook Gerar Recs",
+      "webhookId": "b1ffee02-2345-4678-9012-bbccddeeff00"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Lê o corpo do POST e valida o índice do anúncio.\nconst src = $input.first().json;\nconst b = src.body || src;\nconst indice = b.anuncio_indice || b.indice;\nif (!indice) { throw new Error('Campo \"anuncio_indice\" é obrigatório.'); }\nreturn [{ json: {\n  p_anuncio_indice: String(indice),\n  p_user_id: b.user_id || null,\n  foco: b.foco ? String(b.foco) : null\n} }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [180, 320],
+      "id": "b1000000-0000-4000-8000-000000000003",
+      "name": "Parse Input"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT sameka_embaplan_ad_context_for_ai($1::text) AS ctx;",
+        "options": {
+          "queryReplacement": "={{ [$json.p_anuncio_indice] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [400, 320],
+      "id": "b1000000-0000-4000-8000-000000000004",
+      "name": "Contexto (RPC)",
+      "credentials": {
+        "postgres": {
+          "id": "jFjeYH6Nt3aRNkoM",
+          "name": "Supabase_database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Monta o briefing para a IA a partir do contexto do banco.\nconst ctx = $input.first().json.ctx || {};\nconst meta = $('Parse Input').first().json;\nconst atual = ctx.atual || {};\nif (!ctx.encontrado) {\n  throw new Error('Anúncio \"' + meta.p_anuncio_indice + '\" não tem snapshot no banco. Suba a planilha ao menos uma vez.');\n}\nconst foco = meta.foco;\nconst prompt = [\n  'Você é um(a) especialista sênior em tráfego pago e marketplaces (Shopee Ads) da Embaplan.',\n  'Sua tarefa é gerar recomendações de otimização PRÁTICAS e ACIONÁVEIS para UM anúncio.',\n  '',\n  'REGRAS GERAIS:',\n  '- Use SOMENTE os números fornecidos abaixo. NUNCA invente métricas.',\n  '- ACOS: menor é melhor (meta <= 15%). ROAS/Conversão/CTR/Lucro: maior é melhor.',\n  '- Não repita recomendações que já estão em \"recomendacoes_existentes\"; evolua a estratégia.',\n  '- Cada recomendação deve ser específica (ex.: \"Reduzir o lance alvo de 20% para 14%\"), não genérica.',\n  '- Gere de 2 a 5 recomendações, ordenadas por impacto (prioridade 1 = maior impacto).',\n  '- metrica_alvo deve ser EXATAMENTE um destes: acos, roas, conversao, ctr, lucro, saude, receita, ticket_medio (ou null).',\n  '',\n  '💰 REGRA DE OURO — IMPACTO FINANCEIRO EM R$ (OBRIGATÓRIO EM TODA RECOMENDAÇÃO):',\n  'NENHUMA recomendação pode ser apenas qualitativa. CADA UMA deve dizer, em REAIS (R$), quanto vai CUSTAR ou ECONOMIZAR/RENDER, calculado a partir dos números reais do anúncio (investimento_ads, receita, lucro, acos, roas).',\n  'Fórmulas que você DEVE usar (com os números atuais deste anúncio):',\n  '- Economia ao cortar verba/lance: economia ≈ investimento_ads × (corte% ). Ex.: gasto atual R$ ' + (atual.investimento_ads || 0) + ' e corte de 20% → economia ≈ R$ ' + (Math.round((Number(atual.investimento_ads)||0) * 0.20 * 100) / 100) + ' no período.',\n  '- Receita em risco ao cortar: ao reduzir verba, parte da receita cai junto. Estime a receita perdida ≈ corte% × receita_atribuível e compare com a economia. Só recomende cortar se a economia compensar a receita perdida (ex.: anúncio com ACOS ' + (atual.acos || 0) + '% está gastando R$ ' + (atual.investimento_ads || 0) + ' para gerar R$ ' + (atual.receita || 0) + ').',\n  '- Retorno ao escalar verba: ao adicionar R$ X de verba, receita extra ≈ X × roas (roas atual = ' + (atual.roas || 0) + 'x) e lucro extra ≈ receita_extra × (margem_liquida/100) (margem ≈ ' + (atual.margem_liquida || 0) + '%).',\n  '- Sempre mostre a BASE do cálculo entre parênteses (gasto atual, receita atual, ACOS, ROAS) para o dono do negócio entender de onde veio o número.',\n  'FORMATO DO TEXTO de cada recomendação: comece com a ação concreta e TERMINE com o impacto em R$, no padrão:',\n  '  \"<ação específica com números>. 💰 Impacto: economiza ~R$ X/período (ou rende +R$ Y) — base: gasto atual R$ ' + (atual.investimento_ads || 0) + ', receita R$ ' + (atual.receita || 0) + ', ACOS ' + (atual.acos || 0) + '%, ROAS ' + (atual.roas || 0) + 'x.\"',\n  'PROIBIDO entregar recomendação sem um valor em R$. Se não houver dado suficiente para estimar, diga explicitamente qual número falta — não invente.',\n  '',\n  foco ? ('FOCO PEDIDO PELO USUÁRIO: ' + foco) : '',\n  '',\n  'DADOS DO ANÚNCIO (fonte única de verdade):',\n  JSON.stringify(ctx, null, 2),\n  '',\n  'FORMATO DE SAÍDA — responda APENAS com um array JSON válido, sem texto fora dele, sem markdown.',\n  'Cada item tem: texto (com o impacto em R$ embutido, conforme o padrão acima), prioridade, metrica_alvo,',\n  'e os campos numéricos de apoio economia_estimada_reais e retorno_estimado_reais (number, em R$; use 0 se não se aplicar):',\n  '[',\n  '  { \"texto\": \"Reduzir o lance alvo de ACOS de 57% para 20%. 💰 Impacto: economiza ~R$ 19/período (base: gasto R$ 97, receita R$ 170, ACOS 57%).\", \"prioridade\": 1, \"metrica_alvo\": \"acos\", \"economia_estimada_reais\": 19, \"retorno_estimado_reais\": 0 }',\n  ']'\n].filter(function (l) { return l !== null && l !== undefined; }).join('\\n');\nreturn [{ json: {\n  prompt: prompt,\n  p_anuncio_indice: meta.p_anuncio_indice,\n  p_user_id: meta.p_user_id,\n  loja: atual.loja || null,\n  produto: atual.produto || null\n} }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [620, 320],
+      "id": "b1000000-0000-4000-8000-000000000005",
+      "name": "Montar Prompt"
+    },
+    {
+      "parameters": {
+        "model": "gpt-5.4-mini",
+        "options": {
+          "temperature": 0.4
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAzureOpenAi",
+      "typeVersion": 1,
+      "position": [840, 560],
+      "id": "b1000000-0000-4000-8000-000000000006",
+      "name": "Azure OpenAI Chat Model",
+      "credentials": {
+        "azureOpenAiApi": {
+          "id": "xby4FSbCaCnssJxl",
+          "name": "Azure Open AI account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.prompt }}",
+        "messages": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.5,
+      "position": [860, 320],
+      "id": "b1000000-0000-4000-8000-000000000007",
+      "name": "Gerar Recomendações (IA)"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extrai e valida o array JSON devolvido pela IA.\nconst raw = String($input.first().json.text || '').trim();\nlet jsonStr = raw;\nconst fence = raw.match(/```(?:json)?\\s*([\\s\\S]*?)```/i);\nif (fence) jsonStr = fence[1].trim();\nconst start = jsonStr.indexOf('[');\nconst end = jsonStr.lastIndexOf(']');\nif (start >= 0 && end > start) jsonStr = jsonStr.slice(start, end + 1);\nlet arr = [];\ntry { arr = JSON.parse(jsonStr); } catch (e) { arr = []; }\nconst meta = $('Montar Prompt').first().json;\nconst VALID = ['acos','roas','conversao','ctr','lucro','saude','receita','ticket_medio'];\nfunction n2(v) { const n = Number(v); return isFinite(n) ? Math.round(n * 100) / 100 : 0; }\nconst rows = (Array.isArray(arr) ? arr : []).map(function (r, i) {\n  let texto = String(r.texto || r.recomendacao || '').trim();\n  const econ = n2(r.economia_estimada_reais);\n  const ret = n2(r.retorno_estimado_reais);\n  // Garante que o impacto em R$ apareça no texto (exigência do negócio).\n  if (!/R\\$\\s*\\d/.test(texto) && (econ > 0 || ret > 0)) {\n    const partes = [];\n    if (econ > 0) partes.push('economiza ~R$ ' + econ.toLocaleString('pt-BR'));\n    if (ret > 0) partes.push('rende +R$ ' + ret.toLocaleString('pt-BR'));\n    texto += ' 💰 Impacto: ' + partes.join(' · ') + '.';\n  }\n  return {\n    anuncio_indice: meta.p_anuncio_indice,\n    loja: r.loja || meta.loja || null,\n    produto: r.produto || meta.produto || null,\n    texto: texto,\n    prioridade: Number(r.prioridade) || (i + 1),\n    metrica_alvo: VALID.indexOf(String(r.metrica_alvo)) >= 0 ? r.metrica_alvo : null\n  };\n}).filter(function (r) { return r.texto.length > 5; });\nif (rows.length === 0) { throw new Error('A IA não retornou recomendações válidas.'); }\nreturn [{ json: { p_user_id: meta.p_user_id || null, p_rows: rows } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1080, 320],
+      "id": "b1000000-0000-4000-8000-000000000008",
+      "name": "Validar JSON"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT sameka_embaplan_add_agent_recommendations($1::uuid, $2::jsonb) AS registradas;",
+        "options": {
+          "queryReplacement": "={{ [$json.p_user_id || null, JSON.stringify($json.p_rows)] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [1300, 320],
+      "id": "b1000000-0000-4000-8000-000000000009",
+      "name": "Salvar Recs (RPC)",
+      "credentials": {
+        "postgres": {
+          "id": "jFjeYH6Nt3aRNkoM",
+          "name": "Supabase_database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, registradas: $json.registradas, recomendacoes: $('Validar JSON').first().json.p_rows }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [1520, 320],
+      "id": "b1000000-0000-4000-8000-00000000000a",
+      "name": "Respond Recs IA"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook Gerar Recs": {
+      "main": [[{ "node": "Parse Input", "type": "main", "index": 0 }]]
+    },
+    "Parse Input": {
+      "main": [[{ "node": "Contexto (RPC)", "type": "main", "index": 0 }]]
+    },
+    "Contexto (RPC)": {
+      "main": [[{ "node": "Montar Prompt", "type": "main", "index": 0 }]]
+    },
+    "Montar Prompt": {
+      "main": [[{ "node": "Gerar Recomendações (IA)", "type": "main", "index": 0 }]]
+    },
+    "Azure OpenAI Chat Model": {
+      "ai_languageModel": [[{ "node": "Gerar Recomendações (IA)", "type": "ai_languageModel", "index": 0 }]]
+    },
+    "Gerar Recomendações (IA)": {
+      "main": [[{ "node": "Validar JSON", "type": "main", "index": 0 }]]
+    },
+    "Validar JSON": {
+      "main": [[{ "node": "Salvar Recs (RPC)", "type": "main", "index": 0 }]]
+    },
+    "Salvar Recs (RPC)": {
+      "main": [[{ "node": "Respond Recs IA", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b1000000-0000-4000-8000-0000000000ff",
+  "meta": {
+    "instanceId": "03d32a206f2d8840fce482e6c587726f18775bd9177e9401c00ca76d3086ad41"
+  },
+  "tags": []
+}

@@ -1,5 +1,4 @@
 {
-  "name": "Embaplan - Upload Planilha Anuncios",
   "nodes": [
     {
       "parameters": {
@@ -13,25 +12,19 @@
       },
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
-      "position": [
-        -16,
-        -16
-      ],
-      "id": "f1a2b3c4-d5e6-4789-90ab-cdef00000001",
+      "position": [6208, 4256],
+      "id": "51a153c0-15e7-480c-a46c-d393697bfbca",
       "name": "Webhook Upload Planilha",
       "webhookId": "c0ffee01-1234-4567-8901-aabbccddeeff"
     },
     {
       "parameters": {
-        "jsCode": "// Localiza o primeiro binário .xlsx/.xls/.csv recebido pelo Webhook.\n// O n8n nomeia arquivos multipart como data0, data1, ... (com binaryPropertyName=data).\n// Renomeia para 'data0' para alimentar o nó Update File com nome estável.\nconst item = $input.first();\nconst bin = item.binary || {};\nconst keys = Object.keys(bin);\n\nif (keys.length === 0) {\n  throw new Error('Nenhum arquivo recebido. Envie um .xlsx no campo do form-data.');\n}\n\n// Pega o primeiro binário (data0 normalmente).\nconst sourceKey = keys[0];\nconst fileBin = bin[sourceKey];\nconst fileName = (fileBin.fileName || '').toLowerCase();\nconst mime = (fileBin.mimeType || '').toLowerCase();\n\nconst valid = fileName.endsWith('.xlsx') || fileName.endsWith('.xls') || fileName.endsWith('.csv')\n  || mime.includes('spreadsheetml') || mime.includes('excel') || mime.includes('csv');\n\nif (!valid) {\n  throw new Error(`Arquivo inválido: ${fileBin.fileName || sourceKey}. Envie .xlsx, .xls ou .csv.`);\n}\n\nreturn [{\n  json: {\n    received_file: fileBin.fileName,\n    mime: fileBin.mimeType,\n    size_bytes: fileBin.fileSize || null\n  },\n  binary: { data0: fileBin }\n}];"
+        "jsCode": "// Localiza o primeiro binário .xlsx/.xls/.csv recebido pelo Webhook.\n// O n8n nomeia arquivos multipart como data0, data1, ... (com binaryPropertyName=data).\n// Renomeia para 'data0' para alimentar o nó Update File com nome estável.\nconst item = $input.first();\nconst bin = item.binary || {};\nconst keys = Object.keys(bin);\n\nif (keys.length === 0) {\n  throw new Error('Nenhum arquivo recebido. Envie um .xlsx no campo do form-data.');\n}\n\n// Pega o primeiro binário (data0 normalmente).\nconst sourceKey = keys[0];\nconst fileBin = bin[sourceKey];\nconst fileName = (fileBin.fileName || '').toLowerCase();\nconst mime = (fileBin.mimeType || '').toLowerCase();\n\nconst valid = fileName.endsWith('.xlsx') || fileName.endsWith('.xls') || fileName.endsWith('.csv')\n  || mime.includes('spreadsheetml') || mime.includes('excel') || mime.includes('csv');\n\nif (!valid) {\n  throw new Error(`Arquivo inválido: ${fileBin.fileName || sourceKey}. Envie .xlsx, .xls ou .csv.`);\n}\n\n// Campos de texto do form-data (mês de referência), se enviados pelo front.\nconst body = item.json && item.json.body ? item.json.body : (item.json || {});\nconst periodo = body.periodo || null;  // YYYY-MM\nconst rotulo = body.rotulo || null;    // ex.: 'Junho/2026'\n\nreturn [{\n  json: {\n    received_file: fileBin.fileName,\n    mime: fileBin.mimeType,\n    size_bytes: fileBin.fileSize || null,\n    periodo,\n    rotulo\n  },\n  binary: { data0: fileBin }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [
-        208,
-        -16
-      ],
-      "id": "f1a2b3c4-d5e6-4789-90ab-cdef00000002",
+      "position": [6432, 4256],
+      "id": "4fa9be68-62c1-4d79-9cf9-9faed222f08d",
       "name": "Validar Arquivo"
     },
     {
@@ -48,50 +41,124 @@
       },
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
-      "position": [
-        432,
-        -16
-      ],
-      "id": "f1a2b3c4-d5e6-4789-90ab-cdef00000003",
+      "position": [6656, 4256],
+      "id": "4ff3b452-3983-407d-bf11-6044f3731f76",
       "name": "Atualizar Planilha Embaplan",
       "credentials": {
         "googleDriveOAuth2Api": {
-          "id": "REPLACE_WITH_GOOGLE_DRIVE_CREDENTIAL_ID",
+          "id": "1yxLK6IGIPQiU21B",
           "name": "Google Drive account"
         }
       }
     },
     {
       "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "a1b2c3d4-0001-4001-8001-000000000001",
+              "name": "nome_do_separador",
+              "value": "Base e QC",
+              "type": "string"
+            },
+            {
+              "id": "a1b2c3d4-0002-4002-8002-000000000002",
+              "name": "termo_de_pesquisa",
+              "value": "",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [6912, 4000],
+      "id": "74fb0b9a-d17d-4d45-9448-2bc25d84acd2",
+      "name": "Definir Aba e Termo"
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "2Pt9ddSETV34vSd8",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/2Pt9ddSETV34vSd8",
+          "cachedResultName": "[Embaplan] Sub-fluxo: Consultar Todas as Abas"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.2,
+      "position": [7088, 4000],
+      "id": "3f9867a9-733f-416f-b3a6-5f090b4e265d",
+      "name": "Obter Sumário (Sub-fluxo)"
+    },
+    {
+      "parameters": {
+        "jsCode": "// O sub-fluxo retorna o SUMARIO_PRE_CALCULADO como primeiro item.\n// Localiza o objeto que contém produtos[] (independente do wrapper).\nlet sumario = null;\nfor (const it of $input.all()) {\n  const j = it.json || {};\n  // GUARDA: se o sub-fluxo devolveu a LISTA DE ABAS, a aba configurada não existe.\n  // Falha com mensagem clara em vez de capturar vazio silenciosamente.\n  if (Array.isArray(j.abas_disponiveis)) {\n    throw new Error('Sub-fluxo retornou a lista de abas em vez dos dados. A aba configurada em \"Obter Sumário\" (nome_do_separador) não existe na planilha. Abas disponíveis: ' + j.abas_disponiveis.join(', ') + '. Ajuste o parametro nome_do_separador para uma destas.');\n  }\n  if (Array.isArray(j.produtos)) { sumario = j; break; }\n  if (j.__tipo === 'SUMARIO_PRE_CALCULADO' && Array.isArray(j.produtos)) { sumario = j; break; }\n  if (j.json && Array.isArray(j.json.produtos)) { sumario = j.json; break; }\n}\n\nif (!sumario || !Array.isArray(sumario.produtos)) {\n  // Não bloqueia o upload: apenas sinaliza que não houve captura.\n  return [{ json: { _capturar: false, motivo: 'SUMARIO_PRE_CALCULADO sem produtos[]' } }];\n}\n\nconst meta = $('Validar Arquivo').first().json;\nconst fileName = meta.received_file || null;\nreturn [{\n  json: {\n    _capturar: true,\n    produtos: sumario.produtos,\n    arquivo_nome: fileName,\n    periodo: meta.periodo || null,\n    rotulo: meta.rotulo || null,\n    user_id: null\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [7264, 4000],
+      "id": "a586bed7-0f38-4978-8525-9ec3b3ce3d1d",
+      "name": "Preparar Captura"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://longflatworm-n8n.cloudfy.live/webhook/embaplan-capture-snapshot",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ produtos: $json.produtos, arquivo_nome: $json.arquivo_nome, periodo: $json.periodo, rotulo: $json.rotulo, user_id: $json.user_id }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "neverError": true,
+              "fullResponse": true
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [7440, 4000],
+      "id": "de721923-f9e4-43a7-858a-17703c2d2669",
+      "name": "Capturar Snapshot"
+    },
+    {
+      "parameters": {
         "respondWith": "json",
-        "responseBody": "={ \"success\": true, \"message\": \"Planilha atualizada com sucesso.\", \"file\": $('Validar Arquivo').first().json.received_file }",
+        "responseBody": "={{ JSON.stringify({ success: true, message: 'Planilha atualizada com sucesso.', file: $('Validar Arquivo').first().json.received_file }) }}",
         "options": {
           "responseCode": 200
         }
       },
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
-      "position": [
-        656,
-        -16
-      ],
-      "id": "f1a2b3c4-d5e6-4789-90ab-cdef00000004",
+      "position": [6880, 4256],
+      "id": "9e90decc-5edb-4148-92d0-42a9f8ac0522",
       "name": "Respond OK"
     },
     {
       "parameters": {
-        "content": "## 📥 Upload Planilha Embaplan\n\nSubstitui o conteúdo da planilha oficial de anúncios consumida pelo Agente IA.\n\n**Endpoint:** `POST /webhook/embaplan-upload-planilha`\n**Body:** `multipart/form-data` com o campo `file` (xlsx/xls/csv)\n\n⚠️ Antes de ativar:\n1. Conecte a credencial **Google Drive OAuth2** no nó *Atualizar Planilha Embaplan*.\n2. Confirme que o `fileId` `113Z3z1tTYza8XYnEMBtM5elrhsus2N9yP5Ww0w3zTek` é o ID da planilha oficial.\n3. A conta usada precisa ter permissão de **edição** no arquivo.\n\nO sub-fluxo `Consultar Planilha Inteligente` é quem lê esse arquivo (mesmo ID) — após o upload, a próxima pergunta do agente já enxerga os dados novos.",
-        "height": 280,
-        "width": 540,
+        "content": "## 📥 Upload Planilha Embaplan\n\nSubstitui o conteúdo da planilha oficial de anúncios consumida pelo Agente IA **e** dispara a captura de um snapshot histórico (linha do tempo — Épico 1 do PRD).\n\n**Endpoint:** `POST /webhook/embaplan-upload-planilha`\n**Body:** `multipart/form-data` com o campo `file` (xlsx/xls/csv)\n\n⚠️ Antes de ativar:\n1. Conecte a credencial **Google Drive OAuth2** no nó *Atualizar Planilha Embaplan*.\n2. Confirme que o `fileId` `113Z3z1tTYza8XYnEMBtM5elrhsus2N9yP5Ww0w3zTek` é o ID da planilha oficial.\n3. No nó *Obter Sumário (Sub-fluxo)*, selecione o workflow `[Embaplan] Sub-fluxo: Consultar Planilha Inteligente` (substitui `REPLACE_WITH_SUBFLUXO_WORKFLOW_ID`).\n4. Confirme a URL do nó *Capturar Snapshot* (webhook `embaplan-capture-snapshot` do workflow de Histórico).\n\n🔁 Fluxo: após atualizar o arquivo, o sub-fluxo gera o `SUMARIO_PRE_CALCULADO`; *Preparar Captura* extrai `produtos[]` e *Capturar Snapshot* grava 1 ponto na linha do tempo de cada anúncio. A resposta ao usuário (*Respond OK*) ocorre em paralelo, sem esperar a captura.",
+        "height": 340,
+        "width": 560,
         "color": 4
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [
-        -48,
-        -336
-      ],
-      "id": "f1a2b3c4-d5e6-4789-90ab-cdef00000005",
+      "position": [6176, 3776],
+      "id": "a5aee7d1-62c5-4d07-9a28-226a9d20bce2",
       "name": "Sticky Note"
     }
   ],
@@ -125,17 +192,52 @@
             "node": "Respond OK",
             "type": "main",
             "index": 0
+          },
+          {
+            "node": "Definir Aba e Termo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Definir Aba e Termo": {
+      "main": [
+        [
+          {
+            "node": "Obter Sumário (Sub-fluxo)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obter Sumário (Sub-fluxo)": {
+      "main": [
+        [
+          {
+            "node": "Preparar Captura",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Captura": {
+      "main": [
+        [
+          {
+            "node": "Capturar Snapshot",
+            "type": "main",
+            "index": 0
           }
         ]
       ]
     }
   },
-  "settings": {
-    "executionOrder": "v1"
-  },
   "pinData": {},
   "meta": {
+    "templateCredsSetupCompleted": true,
     "instanceId": "03d32a206f2d8840fce482e6c587726f18775bd9177e9401c00ca76d3086ad41"
-  },
-  "tags": []
+  }
 }

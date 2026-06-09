@@ -81,7 +81,7 @@
         },
         "sheetName": {
           "__rl": true,
-          "value": "={{ $json.query }}",
+          "value": "={{ $json.nome_do_separador || $json.query }}",
           "mode": "name"
         },
         "options": {}

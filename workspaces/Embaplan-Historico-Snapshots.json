@@ -1,0 +1,810 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## 📈 Histórico de Anúncios (Linha do Tempo)\n\nImplementa o Épico 1 do PRD. Três entradas:\n\n**1) POST `/webhook/embaplan-capture-snapshot`** — recebe o `SUMARIO_PRE_CALCULADO` (campo `produtos[]`) + opcional `rotulo`, `arquivo_nome`, `user_id`. Cria um *batch* (versão) e grava 1 snapshot por anúncio. Deve ser chamado ao final do fluxo de upload da planilha.\n\n**2) GET `/webhook/embaplan-ad-timeline?indice=L2%2347`** — série temporal de um anúncio para o gráfico do front.\n\n**3) GET `/webhook/embaplan-overview?loja=Loja%202`** — estado atual de todos os anúncios + tendência (Dashboard).\n\n### ⚙️ Antes de ativar\n1. Os nós `*(RPC)` usam a credencial **Postgres** `Supabase_database` (conexão direta ao banco do Supabase) — não é mais necessário service_role nem HTTP Header Auth.\n2. Rode as migrations `008` a `012` no Supabase para criar as funções `sameka_embaplan_*`.\n3. As queries chamam as funções via `SELECT ... FROM sameka_embaplan_xxx($1, ...)` com *Query Parameters* (n8n sanitiza os valores, evitando SQL injection).",
+        "height": 360,
+        "width": 520,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [2672, 2624],
+      "id": "9d3f41ae-171b-485c-93d8-728febdb15fc",
+      "name": "Doc"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "embaplan-capture-snapshot",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [3232, 2832],
+      "id": "2b11d7a1-b4d7-4b57-bdaf-6c1b2c7cd2d6",
+      "name": "Webhook Capture",
+      "webhookId": "embaplan-capture-snapshot"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "cfg-1",
+              "name": "SUPABASE_URL",
+              "value": "https://longflatworm-supabase.cloudfy.live",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [3456, 2832],
+      "id": "308e2bca-fe36-4060-9683-5cd7fe7b2e9c",
+      "name": "Config"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Achata o SUMARIO_PRE_CALCULADO em linhas de snapshot (1 por anúncio).\n// Aceita o body tanto em $json.body (webhook) quanto direto em $json.\nconst src = $('Webhook Capture').first().json;\nconst body = src.body || src;\n\nconst produtos = Array.isArray(body.produtos) ? body.produtos : [];\n\nfunction extrairLoja(p) {\n  if (p.loja) return String(p.loja);\n  const nome = String(p.produto || '');\n  const m = nome.match(/\\[?\\(?\\s*Loja\\s*([0-9A-Za-z]+)\\s*\\)?\\]?/i);\n  return m ? `Loja ${m[1]}` : null;\n}\n\nfunction num(v) {\n  if (v === null || v === undefined || v === '') return null;\n  const n = Number(String(v).replace(/[^0-9.,-]/g, '').replace(/\\.(?=\\d{3}(\\D|$))/g, '').replace(',', '.'));\n  return Number.isFinite(n) ? n : null;\n}\n\n// Pega o 'Link do Shopee' já gerado pelo sub-fluxo (mesma lógica do chat).\nfunction extrairLink(a) {\n  if (!a) return null;\n  const cand = a['Link do Shopee'] ?? a['link_shopee'] ?? a['linkShopee'] ?? a['link'] ?? a['url'] ?? a['permalink'] ?? (a._metricas && (a._metricas.link || a._metricas['Link do Shopee'])) ?? null;\n  const s = (cand === null || cand === undefined) ? '' : String(cand).trim();\n  return s.length > 0 ? s : null;\n}\n\nconst rows = [];\nfor (const p of produtos) {\n  const loja = extrairLoja(p);\n  const det = Array.isArray(p.anuncios_detalhados) ? p.anuncios_detalhados : [];\n  for (const a of det) {\n    const m = a._metricas || a;\n    const indice = a.indice ?? a.id_anuncio ?? a.id ?? null;\n    if (indice === null || indice === undefined || indice === '') continue;\n    const link = extrairLink(a);\n    rows.push({\n      loja,\n      produto: p.produto ?? null,\n      anuncio_indice: String(indice),\n      titulo: a.titulo ?? a.nome ?? null,\n      status: m.status ?? a.status ?? null,\n      saude: num(p.saude_0_10),\n      vendas: num(m.vendas ?? a.vendas),\n      receita: num(m.receita ?? a.receita),\n      lucro: num(m.lucro ?? a.lucro),\n      investimento_ads: num(m.custo_ads ?? m.investimento_ads ?? a.custo_ads),\n      acos: num(m.acos_pct ?? a.acos_pct),\n      ctr: num(m.ctr_pct ?? a.ctr_pct),\n      conversao: num(m.conversao_pct ?? a.conversao_pct),\n      roas: num(m.roas ?? a.roas),\n      roi: num(m.roi_ads_pct ?? a.roi_ads_pct),\n      margem_liquida: num(m.margem_liquida_pct ?? a.margem_liquida_pct),\n      ticket_medio: num(p.ticket_medio),\n      link,\n      metrics: Object.assign({}, m, { link, 'Link do Shopee': link })\n    });\n  }\n}\n\nif (rows.length === 0) {\n  throw new Error('Nenhum anúncio encontrado em produtos[].anuncios_detalhados. Verifique o SUMARIO_PRE_CALCULADO enviado.');\n}\n\nreturn [{\n  json: {\n    SUPABASE_URL: $('Config').first().json.SUPABASE_URL,\n    periodo: body.periodo ?? null,\n    rotulo: body.rotulo ?? null,\n    arquivo_nome: body.arquivo_nome ?? null,\n    user_id: body.user_id ?? null,\n    rows\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3680, 2832],
+      "id": "9d776eb9-8d95-4752-ad6a-a3afcae862da",
+      "name": "Flatten Snapshots"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT sameka_embaplan_create_month_batch($1::uuid, $2::text, $3::text, $4::text, $5::boolean) AS batch_id;",
+        "options": {
+          "queryReplacement": "={{ [$json.user_id || null, $json.periodo || null, $json.rotulo || null, $json.arquivo_nome || null, true] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [3904, 2832],
+      "id": "4457f189-4c09-4c6d-aa5d-cd7966e2d77e",
+      "name": "Create Batch (RPC)",
+      "credentials": {
+        "postgres": {
+          "id": "jFjeYH6Nt3aRNkoM",
+          "name": "Supabase_database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT sameka_embaplan_insert_snapshots($1::bigint, $2::jsonb) AS anuncios_gravados;",
+        "options": {
+          "queryReplacement": "={{ [$json.batch_id, JSON.stringify($('Flatten Snapshots').first().json.rows)] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [4112, 2832],
+      "id": "0be96f96-1bbf-4be2-922d-64ea1de6b6f8",
+      "name": "Insert Snapshots (RPC)",
+      "credentials": {
+        "postgres": {
+          "id": "jFjeYH6Nt3aRNkoM",
+          "name": "Supabase_database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, batch_id: $('Create Batch (RPC)').first().json.batch_id, anuncios_gravados: $json.anuncios_gravados }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [4336, 2832],
+      "id": "781df898-4d86-4b29-aa33-5033c217a222",
+      "name": "Respond Capture"
+    },
+    {
+      "parameters": {
+        "path": "embaplan-ad-timeline",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [3232, 3104],
+      "id": "060939dc-5224-4e07-8909-bdd8c5b4f383",
+      "name": "Webhook Timeline",
+      "webhookId": "abff315a-876e-4712-8d53-2b3324646767"
+    },
+    {
+      "parameters": {
+        "jsCode": "const q = $input.first().json.query || {};\nconst indice = q.indice || q.anuncio_indice;\nif (!indice) {\n  throw new Error('Parâmetro \"indice\" é obrigatório (ex.: ?indice=L2%2347).');\n}\nreturn [{ json: {\n  SUPABASE_URL: 'https://longflatworm-supabase.cloudfy.live',\n  p_anuncio_indice: String(indice),\n  p_limit: Number(q.limit) || 24\n} }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3456, 3104],
+      "id": "60d325a3-0a2f-4772-98f3-1f5370073e7f",
+      "name": "Parse Timeline Query"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT COALESCE(json_agg(t), '[]'::json) AS pontos FROM sameka_embaplan_ad_timeline($1::text, $2::int) t;",
+        "options": {
+          "queryReplacement": "={{ [$json.p_anuncio_indice, $json.p_limit] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [3680, 3104],
+      "id": "df181f95-fcbc-4e79-93ed-dd582f8edeab",
+      "name": "Timeline (RPC)",
+      "credentials": {
+        "postgres": {
+          "id": "jFjeYH6Nt3aRNkoM",
+          "name": "Supabase_database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ indice: $('Parse Timeline Query').first().json.p_anuncio_indice, pontos: $json.pontos }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [3904, 3104],
+      "id": "c63a6aab-dab6-4ed1-830f-c30c981e58ce",
+      "name": "Respond Timeline"
+    },
+    {
+      "parameters": {
+        "path": "embaplan-overview",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [3232, 3376],
+      "id": "db4e6d10-998c-4483-981f-245527b06767",
+      "name": "Webhook Overview",
+      "webhookId": "6d328eb4-6c79-40f6-b02e-da76a28349cf"
+    },
+    {
+      "parameters": {
+        "jsCode": "const q = $input.first().json.query || {};\nreturn [{ json: {\n  SUPABASE_URL: 'https://longflatworm-supabase.cloudfy.live',\n  p_loja: q.loja || null\n} }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3456, 3376],
+      "id": "edecbdc5-2417-4e64-a766-72f322465705",
+      "name": "Parse Overview Query"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT COALESCE(json_agg(t), '[]'::json) AS anuncios FROM sameka_embaplan_latest_overview($1::text) t;",
+        "options": {
+          "queryReplacement": "={{ [$json.p_loja || null] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [3680, 3376],
+      "id": "7ea8df15-21c2-45c7-8d5d-10eca9e29c55",
+      "name": "Overview (RPC)",
+      "credentials": {
+        "postgres": {
+          "id": "jFjeYH6Nt3aRNkoM",
+          "name": "Supabase_database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ anuncios: $json.anuncios }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [3904, 3376],
+      "id": "f912f4f5-0bdb-46bc-b6b1-23f2254dee39",
+      "name": "Respond Overview"
+    },
+    {
+      "parameters": {
+        "path": "embaplan-recommendations",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [3232, 3632],
+      "id": "f7e1ef18-29f4-4e53-87b7-ecf548c91dea",
+      "name": "Webhook Recs List",
+      "webhookId": "886edafc-43ed-49f3-a00a-1f03f5a5e5f2"
+    },
+    {
+      "parameters": {
+        "jsCode": "const q = $input.first().json.query || {};\nconst indice = q.indice || q.anuncio_indice;\nif (!indice) { throw new Error('Parâmetro \"indice\" é obrigatório.'); }\nreturn [{ json: { SUPABASE_URL: 'https://longflatworm-supabase.cloudfy.live', p_anuncio_indice: String(indice) } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3456, 3632],
+      "id": "7c68e20b-174c-4b17-b698-1bccf530e8b3",
+      "name": "Parse Recs Query"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT COALESCE(json_agg(t), '[]'::json) AS recomendacoes FROM sameka_embaplan_recommendations_for_ad($1::text) t;",
+        "options": {
+          "queryReplacement": "={{ [$json.p_anuncio_indice] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [3680, 3632],
+      "id": "720db07b-2518-4c20-b196-d5ae2f7bc2b7",
+      "name": "Recs List (RPC)",
+      "credentials": {
+        "postgres": {
+          "id": "jFjeYH6Nt3aRNkoM",
+          "name": "Supabase_database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ recomendacoes: $json.recomendacoes }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [3904, 3632],
+      "id": "fdf7dfa3-42e5-4245-a7f6-08b23d913a5f",
+      "name": "Respond Recs"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "embaplan-recommendation-status",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [3232, 3888],
+      "id": "2ebedc48-430c-4437-a8e6-890cd75001ba",
+      "name": "Webhook Rec Status",
+      "webhookId": "04cb8709-61ba-40b0-a56f-8cda87c168a6"
+    },
+    {
+      "parameters": {
+        "jsCode": "const src = $input.first().json;\nconst b = src.body || src;\nconst id = b.id;\nconst status = b.status;\nif (!id || !status) { throw new Error('Campos \"id\" e \"status\" são obrigatórios.'); }\nif (!['pendente','feito','descartado'].includes(status)) { throw new Error('status inválido.'); }\nreturn [{ json: { SUPABASE_URL: 'https://longflatworm-supabase.cloudfy.live', p_id: Number(id), p_status: status, p_nota: b.nota || null } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3456, 3888],
+      "id": "4727dd04-eca3-4f38-8179-6a7cd23a90b6",
+      "name": "Parse Rec Status"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT sameka_embaplan_set_recommendation_status($1::bigint, $2::text, $3::text);",
+        "options": {
+          "queryReplacement": "={{ [$json.p_id, $json.p_status, $json.p_nota || null] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [3680, 3888],
+      "id": "0c600edf-6d0d-4132-96d8-848bd957bfab",
+      "name": "Set Status (RPC)",
+      "credentials": {
+        "postgres": {
+          "id": "jFjeYH6Nt3aRNkoM",
+          "name": "Supabase_database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, id: $('Parse Rec Status').first().json.p_id, status: $('Parse Rec Status').first().json.p_status }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [3904, 3888],
+      "id": "d325b2a2-413f-4997-96c1-679767330a7e",
+      "name": "Respond Rec Status"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "embaplan-user-change",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [3232, 4144],
+      "id": "a06fd48a-a16d-4517-95f9-27353b85586d",
+      "name": "Webhook User Change",
+      "webhookId": "a108eda8-21fb-4c31-9db4-6c71fb9a41ea"
+    },
+    {
+      "parameters": {
+        "jsCode": "const src = $input.first().json;\nconst b = src.body || src;\nconst indice = b.anuncio_indice || b.indice;\nconst texto = b.texto;\nif (!indice || !texto) { throw new Error('Campos \"anuncio_indice\" e \"texto\" são obrigatórios.'); }\nreturn [{ json: { SUPABASE_URL: 'https://longflatworm-supabase.cloudfy.live', p_user_id: b.user_id || null, p_anuncio_indice: String(indice), p_texto: String(texto), p_loja: b.loja || null, p_produto: b.produto || null, p_metrica_alvo: b.metrica_alvo || null } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3456, 4144],
+      "id": "07c50c8c-06a4-4832-a643-077ec462ba09",
+      "name": "Parse User Change"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT sameka_embaplan_add_user_change($1::uuid, $2::text, $3::text, $4::text, $5::text, $6::text) AS id;",
+        "options": {
+          "queryReplacement": "={{ [$json.p_user_id || null, $json.p_anuncio_indice, $json.p_texto, $json.p_loja || null, $json.p_produto || null, $json.p_metrica_alvo || null] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [3680, 4144],
+      "id": "6ff71e9b-5f7b-4d78-8163-b5d1f23f747d",
+      "name": "Add User Change (RPC)",
+      "credentials": {
+        "postgres": {
+          "id": "jFjeYH6Nt3aRNkoM",
+          "name": "Supabase_database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, id: $json.id }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [3904, 4144],
+      "id": "6fbf43cf-6e0e-4629-9c84-253162f464b1",
+      "name": "Respond User Change"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "embaplan-add-recommendations",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [3232, 4416],
+      "id": "62b74085-36f0-4f62-91ec-49b10b903790",
+      "name": "Webhook Add Recs",
+      "webhookId": "9e7718b3-30c1-4120-9af4-09e53230e9a8"
+    },
+    {
+      "parameters": {
+        "jsCode": "const src = $input.first().json;\nconst b = src.body || src;\nconst rows = Array.isArray(b.rows) ? b.rows : (Array.isArray(b) ? b : []);\nif (rows.length === 0) { throw new Error('Campo \"rows\" (array) é obrigatório.'); }\nreturn [{ json: { SUPABASE_URL: 'https://longflatworm-supabase.cloudfy.live', p_user_id: b.user_id || null, p_rows: rows } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3456, 4416],
+      "id": "46be0bd0-7cc9-4ae9-b391-fc3179d4f9e2",
+      "name": "Parse Add Recs"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT sameka_embaplan_add_agent_recommendations($1::uuid, $2::jsonb) AS registradas;",
+        "options": {
+          "queryReplacement": "={{ [$json.p_user_id || null, JSON.stringify($json.p_rows)] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [3680, 4416],
+      "id": "0224fe5b-6480-4299-a788-a237bd7708b1",
+      "name": "Add Recs (RPC)",
+      "credentials": {
+        "postgres": {
+          "id": "jFjeYH6Nt3aRNkoM",
+          "name": "Supabase_database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, registradas: $json.registradas }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [3904, 4416],
+      "id": "f6790c4b-c260-4015-bac2-fb28171a842d",
+      "name": "Respond Add Recs"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "embaplan-recommendation-delete",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [3232, 4688],
+      "id": "c1a00000-0000-4000-8000-000000000001",
+      "name": "Webhook Rec Delete",
+      "webhookId": "c1a00000-1111-4222-8333-444455556666"
+    },
+    {
+      "parameters": {
+        "jsCode": "const src = $input.first().json;\nconst b = src.body || src;\nconst id = b.id;\nif (!id) { throw new Error('Campo \"id\" é obrigatório.'); }\nreturn [{ json: { p_id: Number(id) } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3456, 4688],
+      "id": "c1a00000-0000-4000-8000-000000000002",
+      "name": "Parse Rec Delete"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT sameka_embaplan_delete_recommendation($1::bigint);",
+        "options": {
+          "queryReplacement": "={{ [$json.p_id] }}"
+        }
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [3680, 4688],
+      "id": "c1a00000-0000-4000-8000-000000000003",
+      "name": "Delete Rec (RPC)",
+      "credentials": {
+        "postgres": {
+          "id": "jFjeYH6Nt3aRNkoM",
+          "name": "Supabase_database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: true, id: $('Parse Rec Delete').first().json.p_id }) }}",
+        "options": {
+          "responseCode": 200
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [3904, 4688],
+      "id": "c1a00000-0000-4000-8000-000000000004",
+      "name": "Respond Rec Delete"
+    }
+  ],
+  "connections": {
+    "Webhook Rec Delete": {
+      "main": [
+        [
+          {
+            "node": "Parse Rec Delete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Rec Delete": {
+      "main": [
+        [
+          {
+            "node": "Delete Rec (RPC)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete Rec (RPC)": {
+      "main": [
+        [
+          {
+            "node": "Respond Rec Delete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Capture": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Flatten Snapshots",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Flatten Snapshots": {
+      "main": [
+        [
+          {
+            "node": "Create Batch (RPC)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create Batch (RPC)": {
+      "main": [
+        [
+          {
+            "node": "Insert Snapshots (RPC)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Snapshots (RPC)": {
+      "main": [
+        [
+          {
+            "node": "Respond Capture",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Timeline": {
+      "main": [
+        [
+          {
+            "node": "Parse Timeline Query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Timeline Query": {
+      "main": [
+        [
+          {
+            "node": "Timeline (RPC)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Timeline (RPC)": {
+      "main": [
+        [
+          {
+            "node": "Respond Timeline",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Overview": {
+      "main": [
+        [
+          {
+            "node": "Parse Overview Query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Overview Query": {
+      "main": [
+        [
+          {
+            "node": "Overview (RPC)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Overview (RPC)": {
+      "main": [
+        [
+          {
+            "node": "Respond Overview",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Recs List": {
+      "main": [
+        [
+          {
+            "node": "Parse Recs Query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Recs Query": {
+      "main": [
+        [
+          {
+            "node": "Recs List (RPC)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Recs List (RPC)": {
+      "main": [
+        [
+          {
+            "node": "Respond Recs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Rec Status": {
+      "main": [
+        [
+          {
+            "node": "Parse Rec Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Rec Status": {
+      "main": [
+        [
+          {
+            "node": "Set Status (RPC)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set Status (RPC)": {
+      "main": [
+        [
+          {
+            "node": "Respond Rec Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook User Change": {
+      "main": [
+        [
+          {
+            "node": "Parse User Change",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse User Change": {
+      "main": [
+        [
+          {
+            "node": "Add User Change (RPC)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add User Change (RPC)": {
+      "main": [
+        [
+          {
+            "node": "Respond User Change",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook Add Recs": {
+      "main": [
+        [
+          {
+            "node": "Parse Add Recs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Add Recs": {
+      "main": [
+        [
+          {
+            "node": "Add Recs (RPC)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Recs (RPC)": {
+      "main": [
+        [
+          {
+            "node": "Respond Add Recs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "03d32a206f2d8840fce482e6c587726f18775bd9177e9401c00ca76d3086ad41"
+  }
+}
