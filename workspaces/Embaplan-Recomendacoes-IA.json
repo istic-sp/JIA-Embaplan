@@ -156,10 +156,20 @@
       "main": [[{ "node": "Montar Prompt", "type": "main", "index": 0 }]]
     },
     "Montar Prompt": {
-      "main": [[{ "node": "Gerar Recomendações (IA)", "type": "main", "index": 0 }]]
+      "main": [
+        [{ "node": "Gerar Recomendações (IA)", "type": "main", "index": 0 }]
+      ]
     },
     "Azure OpenAI Chat Model": {
-      "ai_languageModel": [[{ "node": "Gerar Recomendações (IA)", "type": "ai_languageModel", "index": 0 }]]
+      "ai_languageModel": [
+        [
+          {
+            "node": "Gerar Recomendações (IA)",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
     },
     "Gerar Recomendações (IA)": {
       "main": [[{ "node": "Validar JSON", "type": "main", "index": 0 }]]
