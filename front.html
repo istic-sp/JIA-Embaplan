@@ -1623,7 +1623,6 @@
         display: flex !important;
       }
 
-
       @media (min-width: 769px) {
         body.dashboard-open .dashboard-overlay.active {
           left: var(--sidebar-width);
@@ -3228,7 +3227,9 @@
         align-items: center;
         justify-content: center;
         color: var(--text-secondary);
-        transition: opacity 0.15s, color 0.15s;
+        transition:
+          opacity 0.15s,
+          color 0.15s;
       }
       .tag-popover-global-chip:hover .tag-action-btn {
         opacity: 0.6;
@@ -3244,9 +3245,10 @@
       }
 
       @keyframes ac-spin {
-        to { transform: rotate(360deg); }
+        to {
+          transform: rotate(360deg);
+        }
       }
-
 
       /* Tag toast */
       .tag-toast {
@@ -3322,8 +3324,14 @@
         animation: slideUp 0.2s ease;
       }
       @keyframes slideUp {
-        from { transform: translateY(20px); opacity: 0; }
-        to { transform: translateY(0); opacity: 1; }
+        from {
+          transform: translateY(20px);
+          opacity: 0;
+        }
+        to {
+          transform: translateY(0);
+          opacity: 1;
+        }
       }
       .qi-header {
         display: flex;
@@ -4201,7 +4209,8 @@
       .dash-table {
         margin-top: 15px;
       }
-      .dash-table th, .dash-table td {
+      .dash-table th,
+      .dash-table td {
         padding: 10px;
         border-bottom: 1px solid var(--border-color);
         font-size: 13px;
@@ -4349,8 +4358,18 @@
           <!-- Tag Filter Bar -->
           <div class="tag-filter-bar" id="tagFilterBar">
             <span class="tf-icon"><i data-lucide="tag"></i></span>
-            <input type="text" id="tagFilterInput" placeholder="Filtrar por tag ou nome..." />
-            <button class="tag-filter-clear" id="tagFilterClear" title="Limpar filtro">✕</button>
+            <input
+              type="text"
+              id="tagFilterInput"
+              placeholder="Filtrar por tag ou nome..."
+            />
+            <button
+              class="tag-filter-clear"
+              id="tagFilterClear"
+              title="Limpar filtro"
+            >
+              ✕
+            </button>
           </div>
           <div id="sessionList">
             <!-- Sessões carregadas aqui -->
@@ -4562,14 +4581,19 @@
       <div class="confirm-modal">
         <h3 class="confirm-title">Excluir Tag</h3>
         <p class="confirm-text">
-          Tem certeza que deseja excluir a tag <strong id="tagDeleteTarget"></strong> permanentemente?
-          Ela será removida de todas as conversas atreladas.
+          Tem certeza que deseja excluir a tag
+          <strong id="tagDeleteTarget"></strong> permanentemente? Ela será
+          removida de todas as conversas atreladas.
         </p>
         <div class="confirm-actions">
           <button class="btn-modal btn-cancel" id="tagDeleteCancelBtn">
             Cancelar
           </button>
-          <button class="btn-modal btn-confirm" id="tagDeleteConfirmBtn" style="background-color: #ef4444;">
+          <button
+            class="btn-modal btn-confirm"
+            id="tagDeleteConfirmBtn"
+            style="background-color: #ef4444"
+          >
             Excluir
           </button>
         </div>
@@ -4580,10 +4604,17 @@
     <div class="confirm-modal-backdrop" id="tagRenameModal">
       <div class="confirm-modal">
         <h3 class="confirm-title">Editar Tag</h3>
-        <p class="confirm-text" style="margin-bottom: 12px;">
-          Altere o nome da tag. Ela será alterada em todas as conversas onde estiver atrelada.
+        <p class="confirm-text" style="margin-bottom: 12px">
+          Altere o nome da tag. Ela será alterada em todas as conversas onde
+          estiver atrelada.
         </p>
-        <input type="text" id="tagRenameInput" class="login-input" style="margin-bottom: 15px;" placeholder="Nome da tag" />
+        <input
+          type="text"
+          id="tagRenameInput"
+          class="login-input"
+          style="margin-bottom: 15px"
+          placeholder="Nome da tag"
+        />
         <div class="confirm-actions">
           <button class="btn-modal btn-cancel" id="tagRenameCancelBtn">
             Cancelar
@@ -4595,18 +4626,47 @@
       </div>
     </div>
 
-
     <!-- Edit Batch (planilha) Modal -->
     <div class="confirm-modal-backdrop" id="batchEditModal">
       <div class="confirm-modal">
         <h3 class="confirm-title">Editar planilha</h3>
-        <p class="confirm-text" style="margin-bottom: 12px;">
-          Altere a data (mês de referência) e o nome desta planilha. A data define a posição dela na linha do tempo.
+        <p class="confirm-text" style="margin-bottom: 12px">
+          Altere a data (mês de referência) e o nome desta planilha. A data
+          define a posição dela na linha do tempo.
         </p>
-        <label style="font-size:12px;font-weight:700;color:var(--text-secondary);display:block;margin-bottom:4px;">Data da planilha</label>
-        <input type="date" id="batchEditDate" class="login-input" style="margin-bottom: 12px;" />
-        <label style="font-size:12px;font-weight:700;color:var(--text-secondary);display:block;margin-bottom:4px;">Nome (rótulo)</label>
-        <input type="text" id="batchEditLabel" class="login-input" style="margin-bottom: 15px;" placeholder="Ex.: Abril 2026" />
+        <label
+          style="
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            display: block;
+            margin-bottom: 4px;
+          "
+          >Data da planilha</label
+        >
+        <input
+          type="date"
+          id="batchEditDate"
+          class="login-input"
+          style="margin-bottom: 12px"
+        />
+        <label
+          style="
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            display: block;
+            margin-bottom: 4px;
+          "
+          >Nome (rótulo)</label
+        >
+        <input
+          type="text"
+          id="batchEditLabel"
+          class="login-input"
+          style="margin-bottom: 15px"
+          placeholder="Ex.: Abril 2026"
+        />
         <div class="confirm-actions">
           <button class="btn-modal btn-cancel" id="batchEditCancelBtn">
             Cancelar
@@ -4617,7 +4677,6 @@
         </div>
       </div>
     </div>
-
 
     <!-- Ad History / Timeline Modal -->
     <div class="confirm-modal-backdrop" id="historyModal">
@@ -4750,7 +4809,11 @@
     <div class="tag-popover" id="tagPopover">
       <div class="tag-popover-title">🏷️ Tags desta conversa</div>
       <div class="tag-popover-input-row">
-        <input type="text" id="tagPopoverInput" placeholder="Adicionar tag..." />
+        <input
+          type="text"
+          id="tagPopoverInput"
+          placeholder="Adicionar tag..."
+        />
         <button class="tag-popover-add-btn" id="tagPopoverAddBtn">+</button>
       </div>
       <div class="tag-popover-list" id="tagPopoverList">
@@ -4771,48 +4834,116 @@
         </div>
         <div class="qi-body">
           <div class="qi-field">
-            <label><i data-lucide="store" style="width:12px;height:12px"></i> Loja <span class="qi-req">*</span></label>
-            <div class="qi-ac" id="qiLojaAC" data-multi="false" data-field="loja">
-              <div class="qi-ac-selected"><span class="qi-ac-input" contenteditable="true" data-placeholder="Todas as lojas"></span></div>
+            <label
+              ><i data-lucide="store" style="width: 12px; height: 12px"></i>
+              Loja <span class="qi-req">*</span></label
+            >
+            <div
+              class="qi-ac"
+              id="qiLojaAC"
+              data-multi="false"
+              data-field="loja"
+            >
+              <div class="qi-ac-selected">
+                <span
+                  class="qi-ac-input"
+                  contenteditable="true"
+                  data-placeholder="Todas as lojas"
+                ></span>
+              </div>
               <button class="qi-ac-clear" title="Limpar">✕</button>
               <div class="qi-ac-dropdown"></div>
             </div>
           </div>
           <div class="qi-field">
-            <label><i data-lucide="search" style="width:12px;height:12px"></i> Campanha / Anúncio</label>
-            <div class="qi-ac" id="qiCampanhaAC" data-multi="true" data-field="campanha">
-              <div class="qi-ac-selected"><span class="qi-ac-input" contenteditable="true" data-placeholder="Buscar anúncio..."></span></div>
+            <label
+              ><i data-lucide="search" style="width: 12px; height: 12px"></i>
+              Campanha / Anúncio</label
+            >
+            <div
+              class="qi-ac"
+              id="qiCampanhaAC"
+              data-multi="true"
+              data-field="campanha"
+            >
+              <div class="qi-ac-selected">
+                <span
+                  class="qi-ac-input"
+                  contenteditable="true"
+                  data-placeholder="Buscar anúncio..."
+                ></span>
+              </div>
               <button class="qi-ac-clear" title="Limpar">✕</button>
               <div class="qi-ac-dropdown"></div>
             </div>
           </div>
           <div class="qi-field">
-            <label><i data-lucide="package" style="width:12px;height:12px"></i> Produto / Base</label>
-            <div class="qi-ac" id="qiProdutoAC" data-multi="true" data-field="produto">
-              <div class="qi-ac-selected"><span class="qi-ac-input" contenteditable="true" data-placeholder="Buscar produto..."></span></div>
+            <label
+              ><i data-lucide="package" style="width: 12px; height: 12px"></i>
+              Produto / Base</label
+            >
+            <div
+              class="qi-ac"
+              id="qiProdutoAC"
+              data-multi="true"
+              data-field="produto"
+            >
+              <div class="qi-ac-selected">
+                <span
+                  class="qi-ac-input"
+                  contenteditable="true"
+                  data-placeholder="Buscar produto..."
+                ></span>
+              </div>
               <button class="qi-ac-clear" title="Limpar">✕</button>
               <div class="qi-ac-dropdown"></div>
             </div>
           </div>
           <div class="qi-field">
-            <label><i data-lucide="target" style="width:12px;height:12px"></i> Foco da Análise <span class="qi-req">*</span></label>
+            <label
+              ><i data-lucide="target" style="width: 12px; height: 12px"></i>
+              Foco da Análise <span class="qi-req">*</span></label
+            >
             <div class="qi-chips" id="qiFocoChips">
-              <button class="qi-chip selected" data-foco="performance">📊 Performance Geral</button>
-              <button class="qi-chip" data-foco="lucro">💰 Lucro / Margem</button>
+              <button class="qi-chip selected" data-foco="performance">
+                📊 Performance Geral
+              </button>
+              <button class="qi-chip" data-foco="lucro">
+                💰 Lucro / Margem
+              </button>
               <button class="qi-chip" data-foco="acos">📉 ACOS / CTR</button>
-              <button class="qi-chip" data-foco="escala">🚀 Oportunidade de Escala</button>
-              <button class="qi-chip" data-foco="problemas">🛑 Problemas / Ralo</button>
-              <button class="qi-chip" data-foco="comparar">🏷️ Comparar Lojas</button>
+              <button class="qi-chip" data-foco="escala">
+                🚀 Oportunidade de Escala
+              </button>
+              <button class="qi-chip" data-foco="problemas">
+                🛑 Problemas / Ralo
+              </button>
+              <button class="qi-chip" data-foco="comparar">
+                🏷️ Comparar Lojas
+              </button>
             </div>
           </div>
           <div class="qi-field">
-            <label><i data-lucide="message-square" style="width:12px;height:12px"></i> Observações</label>
-            <textarea id="qiObsInput" placeholder="Ex: quero saber se posso aumentar verba sem perder margem..."></textarea>
+            <label
+              ><i
+                data-lucide="message-square"
+                style="width: 12px; height: 12px"
+              ></i>
+              Observações</label
+            >
+            <textarea
+              id="qiObsInput"
+              placeholder="Ex: quero saber se posso aumentar verba sem perder margem..."
+            ></textarea>
           </div>
         </div>
         <div class="qi-footer">
-          <button class="qi-btn qi-btn-cancel" id="qiCancelBtn">Cancelar</button>
-          <button class="qi-btn qi-btn-confirm" id="qiConfirmBtn">🔍 Analisar</button>
+          <button class="qi-btn qi-btn-cancel" id="qiCancelBtn">
+            Cancelar
+          </button>
+          <button class="qi-btn qi-btn-confirm" id="qiConfirmBtn">
+            🔍 Analisar
+          </button>
         </div>
       </div>
     </div>
@@ -5389,7 +5520,7 @@
       // Helper: fetch sessions + load tags for all + re-render
       async function refreshSessions() {
         sessions = await fetchSessions();
-        await Promise.all(sessions.map(s => loadSessionTags(s.session_id)));
+        await Promise.all(sessions.map((s) => loadSessionTags(s.session_id)));
         renderSessionList();
       }
       async function fetchHistory(sessionId) {
@@ -6776,7 +6907,7 @@
         // Load tags for this session in parallel with history
         const [history] = await Promise.all([
           fetchHistory(sessionId),
-          loadSessionTags(sessionId)
+          loadSessionTags(sessionId),
         ]);
         clearChatArea(); // Shows empty state by default
 
@@ -6786,12 +6917,17 @@
           // Suggest tags from first user message if session has no tags yet
           const existingTags = sessionTagsCache[sessionId] || [];
           if (existingTags.length === 0 && history.length >= 1) {
-            const firstUserMsg = history.find(m => m.role === "user");
+            const firstUserMsg = history.find((m) => m.role === "user");
             if (firstUserMsg) {
-              const suggested = suggestTagsFromMessage(firstUserMsg.content || "");
+              const suggested = suggestTagsFromMessage(
+                firstUserMsg.content || "",
+              );
               if (suggested.length > 0) {
                 setTimeout(() => {
-                  showTagToast(`Sugerir tags: ${suggested.map(t => "#" + t).join(" ")}`, suggested);
+                  showTagToast(
+                    `Sugerir tags: ${suggested.map((t) => "#" + t).join(" ")}`,
+                    suggested,
+                  );
                 }, 1500);
               }
             }
@@ -6981,7 +7117,7 @@
         }
 
         sessions = await fetchSessions();
-        await Promise.all(sessions.map(s => loadSessionTags(s.session_id)));
+        await Promise.all(sessions.map((s) => loadSessionTags(s.session_id)));
         renderSessionList();
       }
       // Attach - IMPLEMENTED FILE UPLOAD
@@ -7106,7 +7242,7 @@
         showSkeletonSessions();
         sessions = await fetchSessions();
         // Load tags for all sessions
-        await Promise.all(sessions.map(s => loadSessionTags(s.session_id)));
+        await Promise.all(sessions.map((s) => loadSessionTags(s.session_id)));
         console.log("📋 Total sessions:", sessions.length);
         if (sessions.length > 0 && !currentSessionId) {
           await loadSession(sessions[0].session_id);
@@ -7702,7 +7838,6 @@
       };
       let dashboardSidebarWasClosed = false;
 
-
       function openDashboard() {
         // Mantém o sidebar visível ao lado do painel (no desktop).
         // Guarda o estado anterior para restaurar ao fechar.
@@ -7729,7 +7864,7 @@
         const content = document.getElementById("dashboardContent");
         content.innerHTML =
           '<div class="history-empty">Carregando dados…</div>';
-        
+
         dashboardDataLoading = true;
         updateACDropdownsLoadingState();
 
@@ -7764,7 +7899,6 @@
           updateACDropdownsLoadedState();
         }
       }
-
 
       function populateLojaFilter(rows, current) {
         const sel = document.getElementById("dashboardLojaFilter");
@@ -7808,10 +7942,10 @@
         else if (tab === "oportunidades")
           content.innerHTML = emojiToSvg(renderOportunidades(rows));
         else if (tab === "evolucao") {
-          content.innerHTML = '<div class="history-empty">Carregando dados da evolução...</div>';
+          content.innerHTML =
+            '<div class="history-empty">Carregando dados da evolução...</div>';
           loadAndRenderEvolucao();
-        }
-        else content.innerHTML = emojiToSvg(renderHome(rows));
+        } else content.innerHTML = emojiToSvg(renderHome(rows));
         if (window.lucide) lucide.createIcons();
       }
 
@@ -8501,10 +8635,12 @@
         const link = r.link
           ? `<a class="dash-link" href="${escapeHtml(r.link)}" target="_blank" rel="noopener noreferrer" title="Abrir anúncio"><i data-lucide="external-link"></i></a>`
           : "";
-        
+
         // Deteção de alteração no cache do dashboard
-        const hasChange = dashboardAlterations.some(c => String(c.anuncio_indice) === String(r.anuncio_indice));
-        const changeBadge = hasChange 
+        const hasChange = dashboardAlterations.some(
+          (c) => String(c.anuncio_indice) === String(r.anuncio_indice),
+        );
+        const changeBadge = hasChange
           ? `<span class="alterado-badge" data-index="${indice}" title="Clique para ver alterações">⚠️ Alterado</span>`
           : "";
 
@@ -8522,7 +8658,7 @@
           ${metricHtml}
           <div class="dash-row-actions">
             ${link}
-            <button class="dash-analyze-btn" data-index="${indice}" data-loja="${escapeHtml(r.loja || '')}" data-produto="${escapeHtml(r.produto || '')}" data-titulo="${titulo}" data-campanha="${escapeHtml(r.titulo || r.anuncio_indice || '')}" title="Analisar anúncio com contexto"><i data-lucide="search"></i></button>
+            <button class="dash-analyze-btn" data-index="${indice}" data-loja="${escapeHtml(r.loja || "")}" data-produto="${escapeHtml(r.produto || "")}" data-titulo="${titulo}" data-campanha="${escapeHtml(r.titulo || r.anuncio_indice || "")}" title="Analisar anúncio com contexto"><i data-lucide="search"></i></button>
             <button class="dash-hist-btn" data-index="${indice}" title="Ver histórico e gráficos"><i data-lucide="line-chart"></i></button>
           </div>
         </div>`;
@@ -8648,7 +8784,10 @@
             const defaults = {
               loja: analyzeBtn.getAttribute("data-loja") || "",
               produto: analyzeBtn.getAttribute("data-produto") || "",
-              campanha: analyzeBtn.getAttribute("data-campanha") || analyzeBtn.getAttribute("data-titulo") || ""
+              campanha:
+                analyzeBtn.getAttribute("data-campanha") ||
+                analyzeBtn.getAttribute("data-titulo") ||
+                "",
             };
             closeDashboard();
             openQuickInputModal(defaults);
@@ -8695,11 +8834,19 @@
       // CHAT TAGS (PRD-4) — In-memory store + n8n
       // ============================================
       const TAG_COLORS = [
-        "#7a0101","#2563eb","#059669","#d97706","#7c3aed",
-        "#0891b2","#be185d","#65a30d","#c2410c","#4f46e5",
+        "#7a0101",
+        "#2563eb",
+        "#059669",
+        "#d97706",
+        "#7c3aed",
+        "#0891b2",
+        "#be185d",
+        "#65a30d",
+        "#c2410c",
+        "#4f46e5",
       ];
       let sessionTagsCache = {}; // { sessionId: [tag1, tag2] }
-      let allUserTags = [];      // [{tag, count}]
+      let allUserTags = []; // [{tag, count}]
       let tagPopoverSessionId = null;
 
       function tagColor(str) {
@@ -8712,13 +8859,23 @@
 
       async function apiTag(method, url, body) {
         try {
-          const opts = { method, headers: { "Content-Type": "application/json" } };
+          const opts = {
+            method,
+            headers: { "Content-Type": "application/json" },
+          };
           if (body) opts.body = JSON.stringify(body);
           const res = await fetch(url, opts);
           if (!res.ok) return null;
           const text = await res.text();
-          try { return JSON.parse(text); } catch (_) { return text; }
-        } catch (e) { console.warn("Tag API error:", e); return null; }
+          try {
+            return JSON.parse(text);
+          } catch (_) {
+            return text;
+          }
+        } catch (e) {
+          console.warn("Tag API error:", e);
+          return null;
+        }
       }
 
       async function loadAllUserTags() {
@@ -8733,10 +8890,13 @@
       }
 
       async function loadSessionTags(sessionId) {
-        const data = await apiTag("GET", TAG_SESSION_URL + "?session_id=" + encodeURIComponent(sessionId));
+        const data = await apiTag(
+          "GET",
+          TAG_SESSION_URL + "?session_id=" + encodeURIComponent(sessionId),
+        );
         let tags = [];
         if (Array.isArray(data)) {
-          tags = data.map(t => typeof t === "string" ? t : t.tag);
+          tags = data.map((t) => (typeof t === "string" ? t : t.tag));
         } else if (data && Array.isArray(data.tags)) {
           tags = data.tags;
         }
@@ -8745,7 +8905,11 @@
       }
 
       async function addTag(sessionId, tag) {
-        tag = tag.toLowerCase().trim().replace(/[^a-z0-9à-ÿ\-\s]/gi, "").replace(/\s+/g, " ");
+        tag = tag
+          .toLowerCase()
+          .trim()
+          .replace(/[^a-z0-9à-ÿ\-\s]/gi, "")
+          .replace(/\s+/g, " ");
         if (!tag || tag.length < 1) return;
         const existing = sessionTagsCache[sessionId] || [];
         if (existing.length >= 5) {
@@ -8767,13 +8931,20 @@
       }
 
       async function renameTagGlobal(oldTag, newTag) {
-        newTag = newTag.toLowerCase().trim().replace(/[^a-z0-9à-ÿ\-\s]/gi, "").replace(/\s+/g, " ");
+        newTag = newTag
+          .toLowerCase()
+          .trim()
+          .replace(/[^a-z0-9à-ÿ\-\s]/gi, "")
+          .replace(/\s+/g, " ");
         if (!newTag || newTag === oldTag) return;
-        await apiTag("POST", TAG_RENAME_URL, { old_tag: oldTag, new_tag: newTag });
-        
+        await apiTag("POST", TAG_RENAME_URL, {
+          old_tag: oldTag,
+          new_tag: newTag,
+        });
+
         // Reload all tags to keep UI synchronized
         if (sessions && sessions.length > 0) {
-          await Promise.all(sessions.map(s => loadSessionTags(s.session_id)));
+          await Promise.all(sessions.map((s) => loadSessionTags(s.session_id)));
         }
         await loadAllUserTags();
         renderSessionList();
@@ -8784,10 +8955,10 @@
 
       async function deleteTagGlobal(tag) {
         await apiTag("POST", TAG_DELETE_URL, { tag });
-        
+
         // Reload all tags to keep UI synchronized
         if (sessions && sessions.length > 0) {
-          await Promise.all(sessions.map(s => loadSessionTags(s.session_id)));
+          await Promise.all(sessions.map((s) => loadSessionTags(s.session_id)));
         }
         await loadAllUserTags();
         renderSessionList();
@@ -8795,7 +8966,6 @@
           renderTagPopover();
         }
       }
-
 
       // Toast for tag suggestions
       function showTagToast(message, suggestedTags) {
@@ -8808,24 +8978,28 @@
         }
         let btnsHtml = "";
         if (suggestedTags.length > 0) {
-          btnsHtml = '<button class="primary" onclick="applyTagSuggestion()">Aplicar</button><button onclick="dismissTagToast()">Ignorar</button>';
+          btnsHtml =
+            '<button class="primary" onclick="applyTagSuggestion()">Aplicar</button><button onclick="dismissTagToast()">Ignorar</button>';
         }
         toast.innerHTML = `<span>🏷️ ${message}</span>${btnsHtml}`;
         toast._suggestedTags = suggestedTags;
         toast.classList.add("visible");
         clearTimeout(toast._timer);
-        toast._timer = setTimeout(() => toast.classList.remove("visible"), 5000);
+        toast._timer = setTimeout(
+          () => toast.classList.remove("visible"),
+          5000,
+        );
       }
 
-      window.applyTagSuggestion = function() {
+      window.applyTagSuggestion = function () {
         const toast = document.getElementById("tagToast");
         if (toast && toast._suggestedTags && currentSessionId) {
-          toast._suggestedTags.forEach(t => addTag(currentSessionId, t));
+          toast._suggestedTags.forEach((t) => addTag(currentSessionId, t));
         }
         dismissTagToast();
       };
 
-      window.dismissTagToast = function() {
+      window.dismissTagToast = function () {
         const toast = document.getElementById("tagToast");
         if (toast) toast.classList.remove("visible");
       };
@@ -8835,8 +9009,9 @@
         const suggestions = [];
         const lower = text.toLowerCase();
         // Store names
-        ["shopee", "mercado livre", "ml", "amazon", "shein"].forEach(name => {
-          if (lower.includes(name)) suggestions.push(name.replace("mercado livre", "ml"));
+        ["shopee", "mercado livre", "ml", "amazon", "shein"].forEach((name) => {
+          if (lower.includes(name))
+            suggestions.push(name.replace("mercado livre", "ml"));
         });
         // Product/base patterns
         const baseMatch = lower.match(/base\s+\w+/);
@@ -8844,9 +9019,11 @@
         const qcMatch = lower.match(/qc\s+\d+/);
         if (qcMatch) suggestions.push(qcMatch[0]);
         // Keywords
-        ["acos", "lance", "orçamento", "escala", "lucro", "roas"].forEach(kw => {
-          if (lower.includes(kw)) suggestions.push(kw);
-        });
+        ["acos", "lance", "orçamento", "escala", "lucro", "roas"].forEach(
+          (kw) => {
+            if (lower.includes(kw)) suggestions.push(kw);
+          },
+        );
         return [...new Set(suggestions)].slice(0, 3);
       }
 
@@ -8869,13 +9046,22 @@
 
       function filterSessionsByQuery(sessionsList) {
         const input = document.getElementById("tagFilterInput");
-        const q = (input ? input.value : "").toLowerCase().trim().replace(/^#/, "");
+        const q = (input ? input.value : "")
+          .toLowerCase()
+          .trim()
+          .replace(/^#/, "");
         if (!q) return sessionsList;
         const terms = q.split(/\s+/).filter(Boolean);
-        return sessionsList.filter(s => {
-          const title = (typeof s.titulo === "string" ? s.titulo : (s.titulo && s.titulo.content) || "").toLowerCase();
-          const tags = (sessionTagsCache[s.session_id] || []).join(" ").toLowerCase();
-          return terms.every(t => title.includes(t) || tags.includes(t));
+        return sessionsList.filter((s) => {
+          const title = (
+            typeof s.titulo === "string"
+              ? s.titulo
+              : (s.titulo && s.titulo.content) || ""
+          ).toLowerCase();
+          const tags = (sessionTagsCache[s.session_id] || [])
+            .join(" ")
+            .toLowerCase();
+          return terms.every((t) => title.includes(t) || tags.includes(t));
         });
       }
 
@@ -8885,7 +9071,7 @@
         if (tags.length === 0) return;
         const tagsDiv = document.createElement("div");
         tagsDiv.className = "session-tags";
-        tags.forEach(tag => {
+        tags.forEach((tag) => {
           const color = tagColor(tag);
           const chip = document.createElement("span");
           chip.className = "session-tag";
@@ -8905,7 +9091,7 @@
 
       // Monkey-patch renderSessionList to include tags and filtering
       const _originalRenderSessionList = renderSessionList;
-      renderSessionList = function() {
+      renderSessionList = function () {
         // Filter sessions first
         const filtered = filterSessionsByQuery(sessions);
         elements.sessionList.innerHTML = "";
@@ -8964,7 +9150,10 @@
           sessionDiv.appendChild(delBtn);
 
           sessionDiv.addEventListener("click", (e) => {
-            if (!e.target.classList.contains("delete-btn") && !e.target.closest(".session-tag-btn")) {
+            if (
+              !e.target.classList.contains("delete-btn") &&
+              !e.target.closest(".session-tag-btn")
+            ) {
               loadSession(session.session_id);
             }
           });
@@ -8984,14 +9173,17 @@
         // Position near the button
         const rect = anchorBtn.getBoundingClientRect();
         popover.style.top = Math.min(rect.top, window.innerHeight - 340) + "px";
-        popover.style.left = Math.min(rect.right + 6, window.innerWidth - 270) + "px";
+        popover.style.left =
+          Math.min(rect.right + 6, window.innerWidth - 270) + "px";
 
         renderTagPopover();
       }
 
       function closeTagPopover() {
         document.getElementById("tagPopover").classList.remove("active");
-        document.getElementById("tagPopoverBackdrop").classList.remove("active");
+        document
+          .getElementById("tagPopoverBackdrop")
+          .classList.remove("active");
         tagPopoverSessionId = null;
       }
 
@@ -9003,9 +9195,10 @@
         const list = document.getElementById("tagPopoverList");
         list.innerHTML = "";
         if (tags.length === 0) {
-          list.innerHTML = '<span style="font-size:0.72rem;color:var(--text-secondary)">Nenhuma tag ainda</span>';
+          list.innerHTML =
+            '<span style="font-size:0.72rem;color:var(--text-secondary)">Nenhuma tag ainda</span>';
         }
-        tags.forEach(tag => {
+        tags.forEach((tag) => {
           const color = tagColor(tag);
           const chip = document.createElement("span");
           chip.className = "tag-popover-chip";
@@ -9023,19 +9216,20 @@
         const allList = document.getElementById("tagPopoverAllList");
         allList.innerHTML = "";
         if (allUserTags.length === 0) {
-          allList.innerHTML = '<span style="font-size:0.72rem;color:var(--text-secondary)">Nenhuma tag criada ainda</span>';
+          allList.innerHTML =
+            '<span style="font-size:0.72rem;color:var(--text-secondary)">Nenhuma tag criada ainda</span>';
         }
-        allUserTags.forEach(t => {
+        allUserTags.forEach((t) => {
           const tagName = typeof t === "string" ? t : t.tag;
           const tagCount = typeof t === "object" ? t.count : 0;
-          
+
           const chip = document.createElement("div");
           chip.className = "tag-popover-global-chip";
           const inSession = tags.includes(tagName);
           if (inSession) chip.style.borderColor = tagColor(tagName);
-          
+
           chip.innerHTML = `
-            <span class="tag-click-target" title="${inSession ? 'Remover desta conversa' : 'Adicionar a esta conversa'}">
+            <span class="tag-click-target" title="${inSession ? "Remover desta conversa" : "Adicionar a esta conversa"}">
               <span style="color:${tagColor(tagName)}">${escapeHtml(tagName)}</span>
               <span class="tag-count" style="font-size:0.6rem;color:var(--text-secondary);font-weight:700;">(${tagCount})</span>
             </span>
@@ -9046,25 +9240,29 @@
               <i data-lucide="trash-2" style="width:10px;height:10px"></i>
             </button>
           `;
-          
-          chip.querySelector(".tag-click-target").addEventListener("click", () => {
-            if (inSession) {
-              removeTag(sid, tagName).then(renderTagPopover);
-            } else {
-              addTag(sid, tagName).then(renderTagPopover);
-            }
-          });
-          
+
+          chip
+            .querySelector(".tag-click-target")
+            .addEventListener("click", () => {
+              if (inSession) {
+                removeTag(sid, tagName).then(renderTagPopover);
+              } else {
+                addTag(sid, tagName).then(renderTagPopover);
+              }
+            });
+
           chip.querySelector(".tag-edit-btn").addEventListener("click", (e) => {
             e.stopPropagation();
             showTagRenameModal(tagName);
           });
-          
-          chip.querySelector(".tag-delete-btn").addEventListener("click", (e) => {
-            e.stopPropagation();
-            showTagDeleteModal(tagName);
-          });
-          
+
+          chip
+            .querySelector(".tag-delete-btn")
+            .addEventListener("click", (e) => {
+              e.stopPropagation();
+              showTagDeleteModal(tagName);
+            });
+
           allList.appendChild(chip);
         });
         if (window.lucide) {
@@ -9072,25 +9270,30 @@
         }
       }
 
-
       // Tag popover event wiring
-      document.getElementById("tagPopoverBackdrop").addEventListener("click", closeTagPopover);
-      document.getElementById("tagPopoverAddBtn").addEventListener("click", () => {
-        const input = document.getElementById("tagPopoverInput");
-        const val = input.value.trim();
-        if (val && tagPopoverSessionId) {
-          addTag(tagPopoverSessionId, val).then(() => {
-            input.value = "";
-            renderTagPopover();
-          });
-        }
-      });
-      document.getElementById("tagPopoverInput").addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          document.getElementById("tagPopoverAddBtn").click();
-        }
-      });
+      document
+        .getElementById("tagPopoverBackdrop")
+        .addEventListener("click", closeTagPopover);
+      document
+        .getElementById("tagPopoverAddBtn")
+        .addEventListener("click", () => {
+          const input = document.getElementById("tagPopoverInput");
+          const val = input.value.trim();
+          if (val && tagPopoverSessionId) {
+            addTag(tagPopoverSessionId, val).then(() => {
+              input.value = "";
+              renderTagPopover();
+            });
+          }
+        });
+      document
+        .getElementById("tagPopoverInput")
+        .addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            document.getElementById("tagPopoverAddBtn").click();
+          }
+        });
 
       // Delete Tag Modal
       let tagToDeleteName = null;
@@ -9119,71 +9322,92 @@
       }
 
       // Delete Tag Modal confirmation
-      document.getElementById("tagDeleteCancelBtn").addEventListener("click", hideTagDeleteModal);
-      document.getElementById("tagDeleteConfirmBtn").addEventListener("click", async () => {
-        if (tagToDeleteName) {
-          const btn = document.getElementById("tagDeleteConfirmBtn");
-          const oldText = btn.textContent;
-          btn.textContent = "Excluindo...";
-          btn.disabled = true;
-          try {
-            await deleteTagGlobal(tagToDeleteName);
-          } finally {
-            btn.textContent = oldText;
-            btn.disabled = false;
-            hideTagDeleteModal();
-          }
-        }
-      });
-
-      // Rename Tag Modal confirmation
-      document.getElementById("tagRenameCancelBtn").addEventListener("click", hideTagRenameModal);
-      document.getElementById("tagRenameConfirmBtn").addEventListener("click", async () => {
-        if (tagToRenameName) {
-          const newName = document.getElementById("tagRenameInput").value.trim();
-          if (newName && newName !== tagToRenameName) {
-            const btn = document.getElementById("tagRenameConfirmBtn");
+      document
+        .getElementById("tagDeleteCancelBtn")
+        .addEventListener("click", hideTagDeleteModal);
+      document
+        .getElementById("tagDeleteConfirmBtn")
+        .addEventListener("click", async () => {
+          if (tagToDeleteName) {
+            const btn = document.getElementById("tagDeleteConfirmBtn");
             const oldText = btn.textContent;
-            btn.textContent = "Salvando...";
+            btn.textContent = "Excluindo...";
             btn.disabled = true;
             try {
-              await renameTagGlobal(tagToRenameName, newName);
+              await deleteTagGlobal(tagToDeleteName);
             } finally {
               btn.textContent = oldText;
               btn.disabled = false;
+              hideTagDeleteModal();
+            }
+          }
+        });
+
+      // Rename Tag Modal confirmation
+      document
+        .getElementById("tagRenameCancelBtn")
+        .addEventListener("click", hideTagRenameModal);
+      document
+        .getElementById("tagRenameConfirmBtn")
+        .addEventListener("click", async () => {
+          if (tagToRenameName) {
+            const newName = document
+              .getElementById("tagRenameInput")
+              .value.trim();
+            if (newName && newName !== tagToRenameName) {
+              const btn = document.getElementById("tagRenameConfirmBtn");
+              const oldText = btn.textContent;
+              btn.textContent = "Salvando...";
+              btn.disabled = true;
+              try {
+                await renameTagGlobal(tagToRenameName, newName);
+              } finally {
+                btn.textContent = oldText;
+                btn.disabled = false;
+                hideTagRenameModal();
+              }
+            } else {
               hideTagRenameModal();
             }
-          } else {
-            hideTagRenameModal();
           }
-        }
-      });
-      document.getElementById("tagRenameInput").addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          document.getElementById("tagRenameConfirmBtn").click();
-        }
-      });
+        });
+      document
+        .getElementById("tagRenameInput")
+        .addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            document.getElementById("tagRenameConfirmBtn").click();
+          }
+        });
 
       // Edit Batch (planilha) Modal
-      document.getElementById("batchEditCancelBtn").addEventListener("click", () => {
-        document.getElementById("batchEditModal").classList.remove("active");
-        batchEditTargetId = null;
-      });
-      document.getElementById("batchEditConfirmBtn").addEventListener("click", saveBatchEdit);
-      document.getElementById("batchEditModal").addEventListener("click", (e) => {
-        if (e.target.id === "batchEditModal") {
+      document
+        .getElementById("batchEditCancelBtn")
+        .addEventListener("click", () => {
           document.getElementById("batchEditModal").classList.remove("active");
           batchEditTargetId = null;
-        }
-      });
-      document.getElementById("batchEditLabel").addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-          e.preventDefault();
-          saveBatchEdit();
-        }
-      });
-
+        });
+      document
+        .getElementById("batchEditConfirmBtn")
+        .addEventListener("click", saveBatchEdit);
+      document
+        .getElementById("batchEditModal")
+        .addEventListener("click", (e) => {
+          if (e.target.id === "batchEditModal") {
+            document
+              .getElementById("batchEditModal")
+              .classList.remove("active");
+            batchEditTargetId = null;
+          }
+        });
+      document
+        .getElementById("batchEditLabel")
+        .addEventListener("keydown", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            saveBatchEdit();
+          }
+        });
 
       // ============================================
       // QUICK INPUT MODAL (PRD-1) — com autocomplete
@@ -9197,10 +9421,12 @@
         const selected = qiACGetSelected(acEl);
         let items = [];
         if (field === "loja") {
-          const lojas = [...new Set(dashboardData.map(r => r.loja).filter(Boolean))];
-          items = lojas.map(l => ({ value: l, label: l, sub: "" }));
+          const lojas = [
+            ...new Set(dashboardData.map((r) => r.loja).filter(Boolean)),
+          ];
+          items = lojas.map((l) => ({ value: l, label: l, sub: "" }));
         } else if (field === "campanha") {
-          items = dashboardData.map(r => ({
+          items = dashboardData.map((r) => ({
             value: r.titulo || r.anuncio_indice || "",
             label: r.titulo || r.anuncio_indice || "—",
             sub: [r.loja, r.produto].filter(Boolean).join(" · "),
@@ -9208,17 +9434,19 @@
           }));
         } else if (field === "produto") {
           const map = new Map();
-          dashboardData.forEach(r => {
+          dashboardData.forEach((r) => {
             const key = r.produto || "";
             if (!key) return;
-            if (!map.has(key)) map.set(key, { count: 0, lojas: new Set(), sumReceita: 0 });
+            if (!map.has(key))
+              map.set(key, { count: 0, lojas: new Set(), sumReceita: 0 });
             const e = map.get(key);
             e.count++;
             if (r.loja) e.lojas.add(r.loja);
             e.sumReceita += Number(r.receita) || 0;
           });
           items = [...map.entries()].map(([k, v]) => ({
-            value: k, label: k,
+            value: k,
+            label: k,
             sub: `${v.count} anúncio(s) · ${v.lojas.size} loja(s)`,
           }));
         }
@@ -9226,13 +9454,15 @@
       }
 
       function qiACGetSelected(acEl) {
-        return [...acEl.querySelectorAll(".qi-ac-pill")].map(p => p.dataset.value);
+        return [...acEl.querySelectorAll(".qi-ac-pill")].map(
+          (p) => p.dataset.value,
+        );
       }
 
       function qiACSetSelected(acEl, values) {
-        acEl.querySelectorAll(".qi-ac-pill").forEach(p => p.remove());
+        acEl.querySelectorAll(".qi-ac-pill").forEach((p) => p.remove());
         const input = acEl.querySelector(".qi-ac-input");
-        values.forEach(v => {
+        values.forEach((v) => {
           const pill = document.createElement("span");
           pill.className = "qi-ac-pill";
           pill.dataset.value = v;
@@ -9249,14 +9479,15 @@
 
       function qiACUpdateClear(acEl) {
         const hasSelections = acEl.querySelectorAll(".qi-ac-pill").length > 0;
-        const hasInput = acEl.querySelector(".qi-ac-input").textContent.trim().length > 0;
+        const hasInput =
+          acEl.querySelector(".qi-ac-input").textContent.trim().length > 0;
         const btn = acEl.querySelector(".qi-ac-clear");
         btn.classList.toggle("visible", hasSelections || hasInput);
       }
 
       function qiACOpenDropdown(acEl, filter) {
         const dd = acEl.querySelector(".qi-ac-dropdown");
-        
+
         if (dashboardDataLoading && dashboardData.length === 0) {
           dd.innerHTML = `
             <div class="qi-ac-loading" style="padding: 12px; text-align: center; color: var(--text-secondary); font-size: 0.8rem; display: flex; align-items: center; justify-content: center; gap: 8px;">
@@ -9271,13 +9502,19 @@
         const items = qiBuildOptions(acEl);
         const selected = qiACGetSelected(acEl);
         const multi = acEl.dataset.multi === "true";
-        const q = (filter || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const q = (filter || "")
+          .toLowerCase()
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "");
 
         let filtered = items;
         if (q) {
-          filtered = items.filter(it => {
-            const norm = (it.label + " " + it.sub + " " + it.value).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-            return q.split(/\s+/).every(t => norm.includes(t));
+          filtered = items.filter((it) => {
+            const norm = (it.label + " " + it.sub + " " + it.value)
+              .toLowerCase()
+              .normalize("NFD")
+              .replace(/[\u0300-\u036f]/g, "");
+            return q.split(/\s+/).every((t) => norm.includes(t));
           });
         }
         dd.innerHTML = "";
@@ -9300,16 +9537,20 @@
         if (filtered.length === 0) {
           dd.innerHTML += '<div class="qi-ac-empty">Nenhum resultado</div>';
         }
-        filtered.forEach(it => {
+        filtered.forEach((it) => {
           const opt = document.createElement("div");
-          opt.className = "qi-ac-option" + (selected.includes(it.value) ? " selected" : "");
+          opt.className =
+            "qi-ac-option" + (selected.includes(it.value) ? " selected" : "");
           opt.dataset.value = it.value;
           opt.innerHTML = `<span>${escapeHtml(it.label)}</span>${it.sub ? `<span class="opt-sub">${escapeHtml(it.sub)}</span>` : ""}`;
           opt.addEventListener("mousedown", (e) => {
             e.preventDefault();
             if (multi) {
               if (selected.includes(it.value)) {
-                qiACSetSelected(acEl, selected.filter(v => v !== it.value));
+                qiACSetSelected(
+                  acEl,
+                  selected.filter((v) => v !== it.value),
+                );
               } else {
                 qiACSetSelected(acEl, [...selected, it.value]);
               }
@@ -9318,7 +9559,14 @@
               dd.classList.remove("open");
             }
             // Re-open to update selection state
-            setTimeout(() => qiACOpenDropdown(acEl, acEl.querySelector(".qi-ac-input").textContent), 0);
+            setTimeout(
+              () =>
+                qiACOpenDropdown(
+                  acEl,
+                  acEl.querySelector(".qi-ac-input").textContent,
+                ),
+              0,
+            );
           });
           dd.appendChild(opt);
         });
@@ -9326,12 +9574,14 @@
       }
 
       function qiACCloseAll() {
-        document.querySelectorAll(".qi-ac-dropdown").forEach(dd => dd.classList.remove("open"));
+        document
+          .querySelectorAll(".qi-ac-dropdown")
+          .forEach((dd) => dd.classList.remove("open"));
       }
 
       // Setup autocomplete behavior for each .qi-ac element
       function setupQiAutocompletes() {
-        document.querySelectorAll(".qi-ac").forEach(acEl => {
+        document.querySelectorAll(".qi-ac").forEach((acEl) => {
           const input = acEl.querySelector(".qi-ac-input");
           const clearBtn = acEl.querySelector(".qi-ac-clear");
 
@@ -9366,7 +9616,7 @@
           });
 
           clearBtn.addEventListener("click", () => {
-            acEl.querySelectorAll(".qi-ac-pill").forEach(p => p.remove());
+            acEl.querySelectorAll(".qi-ac-pill").forEach((p) => p.remove());
             input.textContent = "";
             qiACUpdateClear(acEl);
             qiACOpenDropdown(acEl, "");
@@ -9374,7 +9624,9 @@
           });
 
           // Click on selected area focuses input
-          acEl.querySelector(".qi-ac-selected").addEventListener("click", () => input.focus());
+          acEl
+            .querySelector(".qi-ac-selected")
+            .addEventListener("click", () => input.focus());
         });
       }
 
@@ -9411,7 +9663,9 @@
           const raw = (await resp.text()).trim();
           let data = {};
           if (raw) {
-            try { data = JSON.parse(raw); } catch (_) {}
+            try {
+              data = JSON.parse(raw);
+            } catch (_) {}
           }
           dashboardData = Array.isArray(data.anuncios) ? data.anuncios : [];
           dashboardDataLoaded = true;
@@ -9430,7 +9684,7 @@
         selectedMetric: "lucro_total",
         selectedProduct: "",
         compBatchA: null,
-        compBatchB: null
+        compBatchB: null,
       };
       let dashboardAlterations = [];
 
@@ -9438,25 +9692,29 @@
         const existing = document.getElementById("adChangesPopover");
         if (existing) existing.remove();
 
-        const changes = dashboardAlterations.filter(c => String(c.anuncio_indice) === String(idx));
+        const changes = dashboardAlterations.filter(
+          (c) => String(c.anuncio_indice) === String(idx),
+        );
         if (changes.length === 0) return;
 
-        const changeItems = changes.map(c => {
-          let icon = "⚙️";
-          if (c.tipo === "preco") icon = "🏷️";
-          else if (c.tipo === "investimento") icon = "💰";
-          else if (c.tipo === "status") icon = "📊";
-          else if (c.tipo === "novo") icon = "➕";
-          else if (c.tipo === "removido") icon = "➖";
+        const changeItems = changes
+          .map((c) => {
+            let icon = "⚙️";
+            if (c.tipo === "preco") icon = "🏷️";
+            else if (c.tipo === "investimento") icon = "💰";
+            else if (c.tipo === "status") icon = "📊";
+            else if (c.tipo === "novo") icon = "➕";
+            else if (c.tipo === "removido") icon = "➖";
 
-          return `
+            return `
             <div style="padding: 8px 0; border-bottom: 1px solid var(--border-color); font-size: 12px; line-height: 1.4;">
               <span style="margin-right: 6px;">${icon}</span>
-              <strong style="color: var(--text-primary);">${c.campo || 'Alteração'}:</strong> 
-              <span style="color: var(--text-secondary);">${c.resumo || ''}</span>
+              <strong style="color: var(--text-primary);">${c.campo || "Alteração"}:</strong> 
+              <span style="color: var(--text-secondary);">${c.resumo || ""}</span>
             </div>
           `;
-        }).join("");
+          })
+          .join("");
 
         const popover = document.createElement("div");
         popover.id = "adChangesPopover";
@@ -9482,8 +9740,10 @@
         document.body.appendChild(popover);
 
         const rect = anchor.getBoundingClientRect();
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        const scrollLeft = window.pageXOffset || document.documentElement.scrollLeft;
+        const scrollTop =
+          window.pageYOffset || document.documentElement.scrollTop;
+        const scrollLeft =
+          window.pageXOffset || document.documentElement.scrollLeft;
 
         let top = rect.bottom + scrollTop + 6;
         let left = rect.left + scrollLeft;
@@ -9530,18 +9790,22 @@
             fetch(DETECT_CHANGES_URL, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({})
-            }).catch(() => null)
+              body: JSON.stringify({}),
+            }).catch(() => null),
           ]);
 
           if (!evoResp.ok) throw new Error("HTTP " + evoResp.status);
           const evoText = await evoResp.text();
           const evoData = evoText ? JSON.parse(evoText) : {};
-          const batches = Array.isArray(evoData.evolucao) ? evoData.evolucao : [];
+          const batches = Array.isArray(evoData.evolucao)
+            ? evoData.evolucao
+            : [];
 
           if (changesResp && changesResp.ok) {
             const chData = await changesResp.json();
-            dashboardAlterations = Array.isArray(chData.alteracoes) ? chData.alteracoes : [];
+            dashboardAlterations = Array.isArray(chData.alteracoes)
+              ? chData.alteracoes
+              : [];
           }
 
           renderEvolucaoTab(batches, dashboardAlterations);
@@ -9558,42 +9822,55 @@
 
       function renderEvolucaoTab(batches, changes) {
         const content = document.getElementById("dashboardContent");
-        const lojaFilter = document.getElementById("dashboardLojaFilter").value || "";
+        const lojaFilter =
+          document.getElementById("dashboardLojaFilter").value || "";
         const prodFilter = evolutionState.selectedProduct || "";
 
         if (batches.length === 0) {
-          content.innerHTML = '<div class="history-empty">Ainda não há dados de evolução de batches suficientes.</div>';
+          content.innerHTML =
+            '<div class="history-empty">Ainda não há dados de evolução de batches suficientes.</div>';
           return;
         }
 
         // Filter changes based on active dashboard/evolution filters
-        const filteredChanges = changes.filter(ch => {
+        const filteredChanges = changes.filter((ch) => {
           if (lojaFilter && ch.loja !== lojaFilter) return false;
           if (prodFilter && ch.produto !== prodFilter) return false;
           return true;
         });
 
         // Dropdown options for product filter
-        const uniqueProducts = [...new Set(dashboardData.map(r => r.produto).filter(Boolean))].sort();
-        const prodOptions = uniqueProducts.map(p => 
-          `<option value="${escapeHtml(p)}" ${evolutionState.selectedProduct === p ? "selected" : ""}>${escapeHtml(p)}</option>`
-        ).join("");
+        const uniqueProducts = [
+          ...new Set(dashboardData.map((r) => r.produto).filter(Boolean)),
+        ].sort();
+        const prodOptions = uniqueProducts
+          .map(
+            (p) =>
+              `<option value="${escapeHtml(p)}" ${evolutionState.selectedProduct === p ? "selected" : ""}>${escapeHtml(p)}</option>`,
+          )
+          .join("");
 
         // Metric Selector chips
         const metrics = [
           { key: "lucro_total", label: "💰 Lucro Total" },
           { key: "acos_medio", label: "📉 ACOS Médio" },
           { key: "roas_medio", label: "🎯 ROAS Médio" },
-          { key: "ticket_medio_valor", label: "🎟️ Ticket Médio" }
+          { key: "ticket_medio_valor", label: "🎟️ Ticket Médio" },
         ];
 
-        const metricChips = metrics.map(m => {
-          const activeCls = evolutionState.selectedMetric === m.key ? "active" : "";
-          return `<button class="dash-metric-chip ${activeCls}" data-metric="${m.key}">${m.label}</button>`;
-        }).join("");
+        const metricChips = metrics
+          .map((m) => {
+            const activeCls =
+              evolutionState.selectedMetric === m.key ? "active" : "";
+            return `<button class="dash-metric-chip ${activeCls}" data-metric="${m.key}">${m.label}</button>`;
+          })
+          .join("");
 
         // SVG Graph
-        const svgChartHtml = drawEvolucaoSVG(batches, evolutionState.selectedMetric);
+        const svgChartHtml = drawEvolucaoSVG(
+          batches,
+          evolutionState.selectedMetric,
+        );
 
         // Trend KPIs (comparing last batch vs one before)
         let kpiHtml = "";
@@ -9613,12 +9890,18 @@
         }
 
         // Summary Table
-        const tableRows = [...batches].reverse().map(b => {
-          const dt = b.created_at ? new Date(b.created_at).toLocaleDateString("pt-BR") : "";
-          const isoDate = b.periodo
-            ? String(b.periodo).slice(0, 10)
-            : (b.created_at ? new Date(b.created_at).toISOString().slice(0, 10) : "");
-          return `
+        const tableRows = [...batches]
+          .reverse()
+          .map((b) => {
+            const dt = b.created_at
+              ? new Date(b.created_at).toLocaleDateString("pt-BR")
+              : "";
+            const isoDate = b.periodo
+              ? String(b.periodo).slice(0, 10)
+              : b.created_at
+                ? new Date(b.created_at).toISOString().slice(0, 10)
+                : "";
+            return `
             <tr>
               <td><strong>${escapeHtml(b.rotulo)}</strong></td>
               <td>${dt}</td>
@@ -9644,7 +9927,8 @@
               </td>
             </tr>
           `;
-        }).join("");
+          })
+          .join("");
 
         const summaryTableHtml = `
           <div class="scope-block" style="margin-top: 25px;">
@@ -9680,15 +9964,16 @@
         // Alterações Detectadas panel
         let changesHtml = "";
         if (filteredChanges.length > 0) {
-          const changeItems = filteredChanges.map(c => {
-            let icon = "⚙️";
-            if (c.tipo === "preco") icon = "🏷️";
-            else if (c.tipo === "investimento") icon = "💰";
-            else if (c.tipo === "status") icon = "📊";
-            else if (c.tipo === "novo") icon = "➕";
-            else if (c.tipo === "removido") icon = "➖";
+          const changeItems = filteredChanges
+            .map((c) => {
+              let icon = "⚙️";
+              if (c.tipo === "preco") icon = "🏷️";
+              else if (c.tipo === "investimento") icon = "💰";
+              else if (c.tipo === "status") icon = "📊";
+              else if (c.tipo === "novo") icon = "➕";
+              else if (c.tipo === "removido") icon = "➖";
 
-            return `
+              return `
               <div class="change-item" style="padding: 10px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 10px;">
                 <span style="font-size: 1.2rem;">${icon}</span>
                 <div>
@@ -9697,7 +9982,8 @@
                 </div>
               </div>
             `;
-          }).join("");
+            })
+            .join("");
 
           changesHtml = `
             <div class="scope-block" style="margin-top: 25px;">
@@ -9752,12 +10038,14 @@
         `;
 
         // Wire event listeners
-        document.getElementById("evolucaoProdutoFilter").addEventListener("change", (e) => {
-          evolutionState.selectedProduct = e.target.value;
-          loadAndRenderEvolucao();
-        });
+        document
+          .getElementById("evolucaoProdutoFilter")
+          .addEventListener("change", (e) => {
+            evolutionState.selectedProduct = e.target.value;
+            loadAndRenderEvolucao();
+          });
 
-        content.querySelectorAll(".dash-metric-chip").forEach(btn => {
+        content.querySelectorAll(".dash-metric-chip").forEach((btn) => {
           btn.addEventListener("click", () => {
             evolutionState.selectedMetric = btn.dataset.metric;
             renderEvolucaoTab(batches, changes);
@@ -9766,7 +10054,7 @@
 
         wireBatchComparisonEvents(batches);
 
-        content.querySelectorAll(".batch-action-btn").forEach(btn => {
+        content.querySelectorAll(".batch-action-btn").forEach((btn) => {
           btn.addEventListener("click", () => {
             const batchId = btn.dataset.batchId;
             if (btn.dataset.action === "edit") {
@@ -9788,9 +10076,10 @@
         const dateInput = document.getElementById("batchEditDate");
         const labelInput = document.getElementById("batchEditLabel");
 
-        dateInput.value = periodoAtual && /^\d{4}-\d{2}-\d{2}$/.test(periodoAtual)
-          ? periodoAtual
-          : "";
+        dateInput.value =
+          periodoAtual && /^\d{4}-\d{2}-\d{2}$/.test(periodoAtual)
+            ? periodoAtual
+            : "";
         labelInput.value = rotuloAtual || "";
 
         modal.classList.add("active");
@@ -9822,8 +10111,8 @@
             body: JSON.stringify({
               batch_id: batchEditTargetId,
               periodo: dataLimpa || null,
-              rotulo: novoRotulo || null
-            })
+              rotulo: novoRotulo || null,
+            }),
           });
           if (!resp.ok) throw new Error("HTTP " + resp.status);
           modal.classList.remove("active");
@@ -9831,7 +10120,9 @@
           await loadAndRenderEvolucao();
         } catch (err) {
           console.error("Erro ao editar planilha:", err);
-          alert("Não foi possível salvar as alterações. " + (err.message || err));
+          alert(
+            "Não foi possível salvar as alterações. " + (err.message || err),
+          );
         } finally {
           confirmBtn.disabled = false;
           confirmBtn.textContent = "Salvar";
@@ -9841,7 +10132,7 @@
       async function deleteBatchData(batchId, rotulo) {
         const ok = confirm(
           `Apagar TODOS os dados da planilha "${rotulo || batchId}"?\n\n` +
-          "Os anúncios desta rodada e as recomendações pendentes geradas a partir dela serão removidos. Esta ação não pode ser desfeita."
+            "Os anúncios desta rodada e as recomendações pendentes geradas a partir dela serão removidos. Esta ação não pode ser desfeita.",
         );
         if (!ok) return;
 
@@ -9849,7 +10140,7 @@
           const resp = await fetch(BATCH_DELETE_URL, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ batch_id: Number(batchId) })
+            body: JSON.stringify({ batch_id: Number(batchId) }),
           });
           if (!resp.ok) throw new Error("HTTP " + resp.status);
           await loadAndRenderEvolucao();
@@ -9864,10 +10155,10 @@
           lucro_total: "Lucro Total",
           acos_medio: "ACOS Médio",
           roas_medio: "ROAS Médio",
-          ticket_medio_valor: "Ticket Médio"
+          ticket_medio_valor: "Ticket Médio",
         };
         const title = labels[metric] || metric;
-        
+
         const width = 800;
         const height = 250;
         const paddingLeft = 60;
@@ -9878,19 +10169,20 @@
         const chartWidth = width - paddingLeft - paddingRight;
         const chartHeight = height - paddingTop - paddingBottom;
 
-        const dataPoints = batches.map(b => b[metric] || 0);
+        const dataPoints = batches.map((b) => b[metric] || 0);
         const maxVal = Math.max(...dataPoints, 0) * 1.15 || 10;
 
         const n = batches.length;
         const points = dataPoints.map((val, i) => {
-          const x = paddingLeft + (n > 1 ? (i * chartWidth / (n - 1)) : chartWidth / 2);
-          const y = height - paddingBottom - (val * chartHeight / maxVal);
+          const x =
+            paddingLeft + (n > 1 ? (i * chartWidth) / (n - 1) : chartWidth / 2);
+          const y = height - paddingBottom - (val * chartHeight) / maxVal;
           return { x, y, val, label: batches[i].rotulo };
         });
 
         let pathD = "";
         let areaD = "";
-        
+
         if (n > 0) {
           pathD = `M ${points[0].x} ${points[0].y}`;
           areaD = `M ${points[0].x} ${height - paddingBottom} L ${points[0].x} ${points[0].y}`;
@@ -9905,11 +10197,13 @@
         const gridSteps = 4;
         for (let i = 0; i <= gridSteps; i++) {
           const val = (maxVal * i) / gridSteps;
-          const y = height - paddingBottom - (val * chartHeight / maxVal);
-          
+          const y = height - paddingBottom - (val * chartHeight) / maxVal;
+
           let formattedVal = val.toFixed(0);
           if (metric === "lucro_total" || metric === "ticket_medio_valor") {
-            formattedVal = "R$" + Number(val).toLocaleString("pt-BR", { maximumFractionDigits: 0 });
+            formattedVal =
+              "R$" +
+              Number(val).toLocaleString("pt-BR", { maximumFractionDigits: 0 });
           } else if (metric === "acos_medio") {
             formattedVal += "%";
           } else if (metric === "roas_medio") {
@@ -10018,13 +10312,13 @@
             insights.push({
               type: "success",
               icon: "📈",
-              text: `O lucro total subiu **${pProfit.toFixed(0)}%** vs. a rodada anterior (de ${fmtBRL(previous.lucro_total)} para ${fmtBRL(latest.lucro_total)}).`
+              text: `O lucro total subiu **${pProfit.toFixed(0)}%** vs. a rodada anterior (de ${fmtBRL(previous.lucro_total)} para ${fmtBRL(latest.lucro_total)}).`,
             });
           } else if (pProfit < -5) {
             insights.push({
               type: "warn",
               icon: "📉",
-              text: `O lucro total caiu **${Math.abs(pProfit).toFixed(0)}%** vs. a rodada anterior (de ${fmtBRL(previous.lucro_total)} para ${fmtBRL(latest.lucro_total)}).`
+              text: `O lucro total caiu **${Math.abs(pProfit).toFixed(0)}%** vs. a rodada anterior (de ${fmtBRL(previous.lucro_total)} para ${fmtBRL(latest.lucro_total)}).`,
             });
           }
         }
@@ -10035,13 +10329,13 @@
             insights.push({
               type: "warn",
               icon: "⚠️",
-              text: `O ACOS médio subiu de **${previous.acos_medio.toFixed(1)}%** para **${latest.acos_medio.toFixed(1)}%**. Recomenda-se investigar campanhas com consumo excessivo.`
+              text: `O ACOS médio subiu de **${previous.acos_medio.toFixed(1)}%** para **${latest.acos_medio.toFixed(1)}%**. Recomenda-se investigar campanhas com consumo excessivo.`,
             });
           } else if (dACOS < -1.0) {
             insights.push({
               type: "success",
               icon: "🎯",
-              text: `O ACOS médio reduziu de **${previous.acos_medio.toFixed(1)}%** para **${latest.acos_medio.toFixed(1)}%** — excelente otimização de custo.`
+              text: `O ACOS médio reduziu de **${previous.acos_medio.toFixed(1)}%** para **${latest.acos_medio.toFixed(1)}%** — excelente otimização de custo.`,
             });
           }
         }
@@ -10052,13 +10346,13 @@
             insights.push({
               type: "success",
               icon: "🚀",
-              text: `O ROAS médio melhorou em **+${dROAS.toFixed(1)}x** (de ${previous.roas_medio.toFixed(1)}x para ${latest.roas_medio.toFixed(1)}x).`
+              text: `O ROAS médio melhorou em **+${dROAS.toFixed(1)}x** (de ${previous.roas_medio.toFixed(1)}x para ${latest.roas_medio.toFixed(1)}x).`,
             });
           } else if (dROAS < -0.5) {
             insights.push({
               type: "warn",
               icon: "🛑",
-              text: `O ROAS médio reduziu em **${Math.abs(dROAS).toFixed(1)}x** (de ${previous.roas_medio.toFixed(1)}x para ${latest.roas_medio.toFixed(1)}x).`
+              text: `O ROAS médio reduziu em **${Math.abs(dROAS).toFixed(1)}x** (de ${previous.roas_medio.toFixed(1)}x para ${latest.roas_medio.toFixed(1)}x).`,
             });
           }
         }
@@ -10067,16 +10361,20 @@
           insights.push({
             type: "info",
             icon: "✨",
-            text: "As métricas mantiveram-se estáveis na comparação com o último período."
+            text: "As métricas mantiveram-se estáveis na comparação com o último período.",
           });
         }
 
-        const list = insights.map(it => `
+        const list = insights
+          .map(
+            (it) => `
           <div style="padding: 10px 15px; margin-bottom: 8px; background: var(--bg-message-assistant); border-left: 4px solid var(--color-primary); border-radius: 4px; display: flex; align-items: flex-start; gap: 10px; font-size: 13px;">
             <span style="font-size: 1.1rem; line-height: 1;">${it.icon}</span>
             <span>${marked.parseInline(it.text)}</span>
           </div>
-        `).join("");
+        `,
+          )
+          .join("");
 
         return `
           <div class="scope-block" style="margin-top: 25px;">
@@ -10090,16 +10388,66 @@
 
       function drawBatchComparisonTable(batchA, batchB) {
         const rows = [
-          { label: "Lucro Total", key: "lucro_total", unit: "brl", lowerIsBetter: false },
-          { label: "Receita Total", key: "receita_total", unit: "brl", lowerIsBetter: false },
-          { label: "Investimento Ads", key: "investimento_total_ads", unit: "brl", lowerIsBetter: true },
-          { label: "ACOS Médio", key: "acos_medio", unit: "pct", lowerIsBetter: true },
-          { label: "ROAS Médio", key: "roas_medio", unit: "roas", lowerIsBetter: false },
-          { label: "CTR Médio", key: "ctr_medio", unit: "pct", lowerIsBetter: false },
-          { label: "Conversão Média", key: "conversao_media", unit: "pct", lowerIsBetter: false },
-          { label: "Ticket Médio", key: "ticket_medio_valor", unit: "brl", lowerIsBetter: false },
-          { label: "Saúde Média", key: "saude_media", unit: "num", lowerIsBetter: false },
-          { label: "Total Anúncios", key: "total_anuncios", unit: "num", lowerIsBetter: false }
+          {
+            label: "Lucro Total",
+            key: "lucro_total",
+            unit: "brl",
+            lowerIsBetter: false,
+          },
+          {
+            label: "Receita Total",
+            key: "receita_total",
+            unit: "brl",
+            lowerIsBetter: false,
+          },
+          {
+            label: "Investimento Ads",
+            key: "investimento_total_ads",
+            unit: "brl",
+            lowerIsBetter: true,
+          },
+          {
+            label: "ACOS Médio",
+            key: "acos_medio",
+            unit: "pct",
+            lowerIsBetter: true,
+          },
+          {
+            label: "ROAS Médio",
+            key: "roas_medio",
+            unit: "roas",
+            lowerIsBetter: false,
+          },
+          {
+            label: "CTR Médio",
+            key: "ctr_medio",
+            unit: "pct",
+            lowerIsBetter: false,
+          },
+          {
+            label: "Conversão Média",
+            key: "conversao_media",
+            unit: "pct",
+            lowerIsBetter: false,
+          },
+          {
+            label: "Ticket Médio",
+            key: "ticket_medio_valor",
+            unit: "brl",
+            lowerIsBetter: false,
+          },
+          {
+            label: "Saúde Média",
+            key: "saude_media",
+            unit: "num",
+            lowerIsBetter: false,
+          },
+          {
+            label: "Total Anúncios",
+            key: "total_anuncios",
+            unit: "num",
+            lowerIsBetter: false,
+          },
         ];
 
         const fmt = (v, unit) => {
@@ -10110,23 +10458,30 @@
           return Number.isInteger(n) ? String(n) : n.toFixed(1);
         };
 
-        const bodyRows = rows.map(r => {
-          const valA = Number(batchA[r.key]) || 0;
-          const valB = Number(batchB[r.key]) || 0;
-          const delta = valA - valB;
+        const bodyRows = rows
+          .map((r) => {
+            const valA = Number(batchA[r.key]) || 0;
+            const valB = Number(batchB[r.key]) || 0;
+            const delta = valA - valB;
 
-          let deltaHtml = '<span style="color:var(--text-secondary)">—</span>';
-          if (valB !== 0 || valA !== 0) {
-            const pct = valB !== 0 ? (delta / Math.abs(valB)) * 100 : 0;
-            const isGood = r.lowerIsBetter ? delta < 0 : delta > 0;
-            const isNeutral = Math.abs(delta) < 1e-9;
-            const color = isNeutral ? "var(--text-secondary)" : (isGood ? "#059669" : "#dc2626");
-            const arrow = isNeutral ? "→" : (delta > 0 ? "↑" : "↓");
-            const pctTxt = valB !== 0 ? ` (${pct > 0 ? "+" : ""}${pct.toFixed(1)}%)` : "";
-            deltaHtml = `<span style="color:${color};font-weight:600;">${arrow} ${fmt(Math.abs(delta), r.unit)}${pctTxt}</span>`;
-          }
+            let deltaHtml =
+              '<span style="color:var(--text-secondary)">—</span>';
+            if (valB !== 0 || valA !== 0) {
+              const pct = valB !== 0 ? (delta / Math.abs(valB)) * 100 : 0;
+              const isGood = r.lowerIsBetter ? delta < 0 : delta > 0;
+              const isNeutral = Math.abs(delta) < 1e-9;
+              const color = isNeutral
+                ? "var(--text-secondary)"
+                : isGood
+                  ? "#059669"
+                  : "#dc2626";
+              const arrow = isNeutral ? "→" : delta > 0 ? "↑" : "↓";
+              const pctTxt =
+                valB !== 0 ? ` (${pct > 0 ? "+" : ""}${pct.toFixed(1)}%)` : "";
+              deltaHtml = `<span style="color:${color};font-weight:600;">${arrow} ${fmt(Math.abs(delta), r.unit)}${pctTxt}</span>`;
+            }
 
-          return `
+            return `
             <tr>
               <td style="font-weight:600;">${r.label}</td>
               <td style="text-align:right;">${fmt(valA, r.unit)}</td>
@@ -10134,7 +10489,8 @@
               <td style="text-align:right;">${deltaHtml}</td>
             </tr>
           `;
-        }).join("");
+          })
+          .join("");
 
         return `
           <table class="dash-table" style="width:100%;border-collapse:collapse;">
@@ -10155,12 +10511,26 @@
         if (batches.length < 2) return "";
 
         const sorted = [...batches].reverse();
-        
-        if (!evolutionState.compBatchA) evolutionState.compBatchA = sorted[0].batch_id;
-        if (!evolutionState.compBatchB) evolutionState.compBatchB = sorted[1] ? sorted[1].batch_id : sorted[0].batch_id;
 
-        const optA = sorted.map(b => `<option value="${b.batch_id}" ${evolutionState.compBatchA === b.batch_id ? "selected" : ""}>${escapeHtml(b.rotulo)}</option>`).join("");
-        const optB = sorted.map(b => `<option value="${b.batch_id}" ${evolutionState.compBatchB === b.batch_id ? "selected" : ""}>${escapeHtml(b.rotulo)}</option>`).join("");
+        if (!evolutionState.compBatchA)
+          evolutionState.compBatchA = sorted[0].batch_id;
+        if (!evolutionState.compBatchB)
+          evolutionState.compBatchB = sorted[1]
+            ? sorted[1].batch_id
+            : sorted[0].batch_id;
+
+        const optA = sorted
+          .map(
+            (b) =>
+              `<option value="${b.batch_id}" ${evolutionState.compBatchA === b.batch_id ? "selected" : ""}>${escapeHtml(b.rotulo)}</option>`,
+          )
+          .join("");
+        const optB = sorted
+          .map(
+            (b) =>
+              `<option value="${b.batch_id}" ${evolutionState.compBatchB === b.batch_id ? "selected" : ""}>${escapeHtml(b.rotulo)}</option>`,
+          )
+          .join("");
 
         return `
           <div class="scope-block" style="margin-top: 25px;">
@@ -10193,12 +10563,13 @@
           evolutionState.compBatchA = idA;
           evolutionState.compBatchB = idB;
 
-          const batchA = batches.find(b => b.batch_id === idA);
-          const batchB = batches.find(b => b.batch_id === idB);
+          const batchA = batches.find((b) => b.batch_id === idA);
+          const batchB = batches.find((b) => b.batch_id === idB);
 
           const resultDiv = document.getElementById("batchComparisonResult");
           if (!batchA || !batchB) {
-            resultDiv.innerHTML = '<div style="font-size:12px;color:var(--text-secondary)">Selecione duas rodadas válidas.</div>';
+            resultDiv.innerHTML =
+              '<div style="font-size:12px;color:var(--text-secondary)">Selecione duas rodadas válidas.</div>';
             return;
           }
 
@@ -10220,25 +10591,31 @@
           fetchDashboardDataInBackground();
         }
 
-
         // Reset
         qiSelectedFocos = new Set(["performance"]);
         document.getElementById("qiObsInput").value = defaults?.obs || "";
-        document.querySelectorAll(".qi-chip").forEach(c => {
+        document.querySelectorAll(".qi-chip").forEach((c) => {
           c.classList.toggle("selected", c.dataset.foco === "performance");
         });
 
         // Reset all autocomplete selections
-        document.querySelectorAll(".qi-ac").forEach(acEl => {
+        document.querySelectorAll(".qi-ac").forEach((acEl) => {
           qiACSetSelected(acEl, []);
           acEl.querySelector(".qi-ac-input").textContent = "";
           qiACUpdateClear(acEl);
         });
 
         // Pre-fill defaults if provided
-        if (defaults?.loja) qiACSetSelected(document.getElementById("qiLojaAC"), [defaults.loja]);
-        if (defaults?.campanha) qiACSetSelected(document.getElementById("qiCampanhaAC"), [defaults.campanha]);
-        if (defaults?.produto) qiACSetSelected(document.getElementById("qiProdutoAC"), [defaults.produto]);
+        if (defaults?.loja)
+          qiACSetSelected(document.getElementById("qiLojaAC"), [defaults.loja]);
+        if (defaults?.campanha)
+          qiACSetSelected(document.getElementById("qiCampanhaAC"), [
+            defaults.campanha,
+          ]);
+        if (defaults?.produto)
+          qiACSetSelected(document.getElementById("qiProdutoAC"), [
+            defaults.produto,
+          ]);
 
         setTimeout(() => {
           document.querySelector("#qiLojaAC .qi-ac-input").focus();
@@ -10252,8 +10629,12 @@
 
       function buildQuickInputPrompt() {
         const lojaVals = qiACGetSelected(document.getElementById("qiLojaAC"));
-        const campanhaVals = qiACGetSelected(document.getElementById("qiCampanhaAC"));
-        const produtoVals = qiACGetSelected(document.getElementById("qiProdutoAC"));
+        const campanhaVals = qiACGetSelected(
+          document.getElementById("qiCampanhaAC"),
+        );
+        const produtoVals = qiACGetSelected(
+          document.getElementById("qiProdutoAC"),
+        );
         const obs = document.getElementById("qiObsInput").value.trim();
         const focos = [...qiSelectedFocos];
 
@@ -10263,15 +10644,20 @@
           acos: "ACOS / CTR",
           escala: "Oportunidade de Escala",
           problemas: "Problemas / Ralo",
-          comparar: "Comparar Lojas"
+          comparar: "Comparar Lojas",
         };
 
         const parts = [];
         if (lojaVals.length > 0) parts.push(`[LOJA: ${lojaVals.join(", ")}]`);
         else parts.push("[LOJA: Todas]");
-        if (campanhaVals.length > 0) parts.push(`[CAMPANHA: ${campanhaVals.join(", ")}]`);
-        if (produtoVals.length > 0) parts.push(`[PRODUTO: ${produtoVals.join(", ")}]`);
-        if (focos.length > 0) parts.push(`[FOCO: ${focos.map(f => focoLabels[f] || f).join(", ")}]`);
+        if (campanhaVals.length > 0)
+          parts.push(`[CAMPANHA: ${campanhaVals.join(", ")}]`);
+        if (produtoVals.length > 0)
+          parts.push(`[PRODUTO: ${produtoVals.join(", ")}]`);
+        if (focos.length > 0)
+          parts.push(
+            `[FOCO: ${focos.map((f) => focoLabels[f] || f).join(", ")}]`,
+          );
         if (obs) parts.push(`[OBS: ${obs}]`);
 
         return parts.join(" ");
@@ -10294,11 +10680,17 @@
       });
 
       // Quick input event wiring
-      document.getElementById("qiCloseBtn").addEventListener("click", closeQuickInputModal);
-      document.getElementById("qiCancelBtn").addEventListener("click", closeQuickInputModal);
-      document.getElementById("qiModalBackdrop").addEventListener("click", (e) => {
-        if (e.target === e.currentTarget) closeQuickInputModal();
-      });
+      document
+        .getElementById("qiCloseBtn")
+        .addEventListener("click", closeQuickInputModal);
+      document
+        .getElementById("qiCancelBtn")
+        .addEventListener("click", closeQuickInputModal);
+      document
+        .getElementById("qiModalBackdrop")
+        .addEventListener("click", (e) => {
+          if (e.target === e.currentTarget) closeQuickInputModal();
+        });
       document.getElementById("qiConfirmBtn").addEventListener("click", () => {
         const prompt = buildQuickInputPrompt();
         closeQuickInputModal();

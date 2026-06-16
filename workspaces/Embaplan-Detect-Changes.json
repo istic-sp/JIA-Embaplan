@@ -10,10 +10,7 @@
       },
       "id": "detect-webhook-id",
       "name": "Webhook - Detect Changes",
-      "position": [
-        -200,
-        100
-      ],
+      "position": [-200, 100],
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
       "webhookId": "detect-webhook-uid"
@@ -24,10 +21,7 @@
       },
       "id": "detect-parse-query-id",
       "name": "Parse Detect Args",
-      "position": [
-        0,
-        100
-      ],
+      "position": [0, 100],
       "type": "n8n-nodes-base.code",
       "typeVersion": 2
     },
@@ -41,10 +35,7 @@
       },
       "id": "detect-db-id",
       "name": "Previous Snapshots from DB",
-      "position": [
-        200,
-        100
-      ],
+      "position": [200, 100],
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "credentials": {
@@ -60,10 +51,7 @@
       },
       "id": "detect-comparison-id",
       "name": "Compare Data",
-      "position": [
-        400,
-        100
-      ],
+      "position": [400, 100],
       "type": "n8n-nodes-base.code",
       "typeVersion": 2
     },
@@ -77,10 +65,7 @@
       },
       "id": "detect-respond-id",
       "name": "Respond Changes",
-      "position": [
-        600,
-        100
-      ],
+      "position": [600, 100],
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5
     }
