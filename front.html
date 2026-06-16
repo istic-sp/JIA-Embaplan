@@ -9544,9 +9544,7 @@
         const rows = qiFilteredRows(field);
         let items = [];
         if (field === "loja") {
-          const lojas = [
-            ...new Set(rows.map((r) => r.loja).filter(Boolean)),
-          ];
+          const lojas = [...new Set(rows.map((r) => r.loja).filter(Boolean))];
           items = lojas.map((l) => ({ value: l, label: l, sub: "" }));
         } else if (field === "campanha") {
           items = rows.map((r) => ({
