@@ -4633,6 +4633,35 @@
       </div>
     </div>
 
+    <!-- Upload/Generic Error Modal -->
+    <div class="confirm-modal-backdrop" id="errorModal">
+      <div class="confirm-modal" style="max-width: 520px">
+        <h3
+          class="confirm-title"
+          id="errorModalTitle"
+          style="display: flex; align-items: center; gap: 8px; color: #d32f2f"
+        >
+          <i data-lucide="alert-triangle" style="width: 20px; height: 20px"></i>
+          <span>Não foi possível enviar</span>
+        </h3>
+        <div
+          id="errorModalBody"
+          style="
+            font-size: 14px;
+            line-height: 1.5;
+            color: var(--color-text, #333);
+            max-height: 50vh;
+            overflow-y: auto;
+          "
+        ></div>
+        <div class="confirm-actions">
+          <button class="btn-modal btn-confirm" id="errorModalOkBtn">
+            Entendi
+          </button>
+        </div>
+      </div>
+    </div>
+
     <!-- Tag Delete Confirm Modal -->
     <div class="confirm-modal-backdrop" id="tagDeleteModal">
       <div class="confirm-modal">
@@ -6694,7 +6723,56 @@
             : type === "success"
               ? "#388e3c"
               : "#7A1818";
-        setTimeout(() => (elements.statusMessage.textContent = ""), 3000);
+        // Erros ficam mais tempo na tela (precisam ser lidos); demais somem rápido.
+        const ttl = type === "error" ? 8000 : 3000;
+        clearTimeout(setStatus._t);
+        setStatus._t = setTimeout(
+          () => (elements.statusMessage.textContent = ""),
+          ttl,
+        );
+      }
+
+      // Modal de erro claro e formatado (usado p/ falhas de upload, validação, etc.).
+      // Aceita mensagens com partes separadas por " | " e as renderiza em linhas.
+      function showErrorModal(message, title) {
+        const modal = document.getElementById("errorModal");
+        const bodyEl = document.getElementById("errorModalBody");
+        const titleSpan = document.querySelector("#errorModalTitle span");
+        if (!modal || !bodyEl) {
+          // Fallback se o modal não existir por algum motivo.
+          setStatus(String(message || "Erro inesperado."), "error");
+          return;
+        }
+        if (titleSpan && title) titleSpan.textContent = title;
+
+        const escape = (s) =>
+          String(s)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+
+        const partes = String(message || "Erro inesperado.")
+          .split("|")
+          .map((p) => p.trim())
+          .filter(Boolean);
+
+        let html = "";
+        if (partes.length <= 1) {
+          html = `<p style="margin:0;">${escape(partes[0] || message)}</p>`;
+        } else {
+          // Primeira parte = título/resumo em destaque; demais = lista detalhada.
+          html =
+            `<p style="margin:0 0 10px; font-weight:600;">${escape(partes[0])}</p>` +
+            '<ul style="margin:0; padding-left:18px;">' +
+            partes
+              .slice(1)
+              .map((p) => `<li style="margin:4px 0;">${escape(p)}</li>`)
+              .join("") +
+            "</ul>";
+        }
+        bodyEl.innerHTML = html;
+        modal.style.display = "flex";
+        if (window.lucide) lucide.createIcons();
       }
       // ============================================
       // EVENT HANDLERS
@@ -6760,6 +6838,19 @@
       // Event Listeners for Modal
       elements.cancelDeleteBtn.addEventListener("click", hideDeleteModal);
 
+      // Fecha o modal de erro.
+      (function wireErrorModal() {
+        const modal = document.getElementById("errorModal");
+        const okBtn = document.getElementById("errorModalOkBtn");
+        if (okBtn && modal) {
+          okBtn.addEventListener("click", () => {
+            modal.style.display = "none";
+          });
+          modal.addEventListener("click", (e) => {
+            if (e.target === modal) modal.style.display = "none";
+          });
+        }
+      })();
       elements.confirmDeleteBtn.addEventListener("click", async () => {
         if (pendingAction === "delete" && sessionToDeleteId) {
           // Feedback visual
@@ -6867,6 +6958,16 @@
             const [ano, mes] = periodo.split("-");
             rotulo = `${MESES[Number(mes) - 1]}/${ano}`;
           }
+
+          // GUARDA: periodo obrigatória.
+          if (!periodo || periodo.trim() === "") {
+            setStatus(
+              "Selecione a data de referência antes de enviar a planilha.",
+              "error",
+            );
+            return;
+          }
+
           hideDeleteModal();
 
           const origLabel = elements.uploadSheetBtn.innerHTML;
@@ -6891,20 +6992,35 @@
             });
             if (!response.ok) {
               const txt = await response.text().catch(() => "");
-              throw new Error(txt || `HTTP ${response.status}`);
+              let msg = txt || `HTTP ${response.status}`;
+              // O backend devolve { success:false, error:"..." } quando bloqueia.
+              try {
+                const j = JSON.parse(txt);
+                if (j && (j.error || j.message)) msg = j.error || j.message;
+              } catch (_) {
+                /* corpo não-JSON: usa o texto cru */
+              }
+              throw new Error(msg);
             }
-            setStatus(
-              rotulo
-                ? `Planilha de ${rotulo} adicionada à linha do tempo.`
-                : `Planilha "${file.name}" atualizada com sucesso.`,
-              "success",
-            );
+            // Sucesso: o backend informa se a base do agente foi atualizada
+            // (data mais recente) ou se foi só um registro histórico (data anterior).
+            let data = null;
+            try {
+              data = await response.json();
+            } catch (_) {
+              /* sem corpo JSON */
+            }
+            const sucessoMsg =
+              data && data.message
+                ? data.message
+                : rotulo
+                  ? `Planilha de ${rotulo} adicionada à linha do tempo.`
+                  : `Planilha "${file.name}" enviada com sucesso.`;
+            setStatus(sucessoMsg, "success");
           } catch (err) {
             console.error("Sheet upload error:", err);
-            setStatus(
-              `Falha ao atualizar planilha: ${err.message || err}`,
-              "error",
-            );
+            // Erro detalhado (ex.: planilha fora do padrão) → modal claro e legível.
+            showErrorModal(err.message || String(err), "Não foi possível enviar");
           } finally {
             elements.uploadSheetBtn.disabled = false;
             elements.uploadSheetBtn.innerHTML = origLabel;

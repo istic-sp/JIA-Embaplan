@@ -12,8 +12,8 @@
       },
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
-      "position": [6208, 4256],
-      "id": "51a153c0-15e7-480c-a46c-d393697bfbca",
+      "position": [11552, 6816],
+      "id": "538ded0d-c948-4c89-8c98-22f54269d4f3",
       "name": "Webhook Upload Planilha",
       "webhookId": "c0ffee01-1234-4567-8901-aabbccddeeff"
     },
@@ -23,9 +23,75 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [6432, 4256],
-      "id": "4fa9be68-62c1-4d79-9cf9-9faed222f08d",
+      "position": [11776, 6816],
+      "id": "0834012f-becc-4860-a1bd-5e910e13dee7",
       "name": "Validar Arquivo"
+    },
+    {
+      "parameters": {
+        "operation": "xlsx",
+        "binaryPropertyName": "data0",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1,
+      "position": [11936, 6816],
+      "id": "32b83cb5-85e2-49a3-9684-6b31479b55a5",
+      "name": "Extrair Planilha (validação)"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Gate de esquema: valida a planilha recebida ANTES de substituir a oficial.\n// Exige EXATAMENTE as 22 colunas padrão da aba \"Base e QC\".\n// NÃO lança erro: marca _schema_ok para o nó IF ramificar e responder ao front.\nconst EXPECTED = ['#','Loja','Index','ID do Anúncio','Nome do Anúncio','Impressões','Cliques','CTR','Conversões','Custo por Conversão','Taxa de Conversão','Itens Vendidos','GMV','Despesas','ACOS','Categoria','Tamanho','Qtd','% Lucro Médio P','lucro liquido','% Lucro','Índice'];\nconst norm = s => String(s == null ? '' : s).normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().replace(/\\s+/g, ' ').trim();\nconst isJunk = c => { const n = norm(c); return n === '' || /^__empty/.test(n); };\nconst orig = $('Validar Arquivo').first();\nconst linhas = $input.all();\nlet erro = null;\nif (linhas.length === 0) {\n  erro = 'Planilha fora do padrão: não foi possível ler a aba principal (esperado \"Base e QC\" com 22 colunas). Verifique se enviou a planilha correta.';\n} else {\n  const colsRaw = Object.keys(linhas[0].json || {}).filter(c => !isJunk(c));\n  const colsNorm = colsRaw.map(norm);\n  const expNorm = EXPECTED.map(norm);\n  const faltando = EXPECTED.filter((c, i) => !colsNorm.includes(expNorm[i]));\n  const extras = colsRaw.filter(c => !expNorm.includes(norm(c)));\n  if (faltando.length > 0 || extras.length > 0 || colsNorm.length !== expNorm.length) {\n    erro = ['Planilha fora do padrão — upload BLOQUEADO (a planilha oficial NÃO foi alterada).', 'Esperado: aba \"Base e QC\" com exatamente 22 colunas.', 'Faltando (' + faltando.length + '): ' + (faltando.length ? faltando.join(', ') : 'nenhuma'), 'Inesperadas (' + extras.length + '): ' + (extras.length ? extras.join(', ') : 'nenhuma'), 'Recebidas (' + colsRaw.length + '): ' + colsRaw.join(', ')].join(' | ');\n  }\n}\nif (erro) {\n  return [{ json: { _schema_ok: false, _erro: erro } }];\n}\n// OK: repassa o item ORIGINAL (com binário data0 + periodo/rotulo) marcando a flag.\nreturn [{ json: Object.assign({}, orig.json, { _schema_ok: true }), binary: orig.binary }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [12112, 6816],
+      "id": "4ad35c9d-a02c-4f52-a438-c2a8889ab12c",
+      "name": "Validar Esquema"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "f0a1b2c3-0006-4006-8006-000000000006",
+              "leftValue": "={{ $json._schema_ok }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [12288, 6816],
+      "id": "e1f2a3b4-0007-4007-8007-000000000007",
+      "name": "Esquema OK?"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ success: false, error: $json._erro || 'Planilha fora do padrão.' }) }}",
+        "options": {
+          "responseCode": 422
+        }
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [12512, 7120],
+      "id": "a7b8c9d0-0008-4008-8008-000000000008",
+      "name": "Bloquear Upload (Respond)"
     },
     {
       "parameters": {
@@ -41,8 +107,8 @@
       },
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
-      "position": [6656, 4256],
-      "id": "4ff3b452-3983-407d-bf11-6044f3731f76",
+      "position": [13120, 6620],
+      "id": "3c535875-0695-482e-8e15-b1287d649271",
       "name": "Atualizar Planilha Embaplan",
       "credentials": {
         "googleDriveOAuth2Api": {
@@ -53,29 +119,71 @@
     },
     {
       "parameters": {
-        "assignments": {
-          "assignments": [
+        "operation": "executeQuery",
+        "query": "SELECT COALESCE(MAX(periodo), '1900-01-01')::text AS max_periodo FROM embaplan_upload_batch;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [12480, 6816],
+      "id": "aa11bb22-0009-4009-8009-000000000009",
+      "name": "Buscar Período Mais Recente",
+      "credentials": {
+        "postgres": {
+          "id": "jFjeYH6Nt3aRNkoM",
+          "name": "Supabase_database"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Decide se o upload pode substituir a base do agente no Drive.\n// Regra: só substitui se a data enviada for >= à mais recente já registrada.\n// Datas anteriores vão APENAS para o histórico (não tocam no Drive).\nconst meta = $('Validar Arquivo').first();\nconst m = meta.json || {};\nlet periodo = m.periodo || null;\nif (!periodo) { throw new Error('periodo ausente no upload — data de referência obrigatória.'); }\nconst pData = /^\\d{4}-\\d{2}$/.test(periodo) ? (periodo + '-01') : String(periodo).slice(0, 10);\nconst maxData = String($json.max_periodo || '1900-01-01').slice(0, 10);\nconst atualizar_drive = pData >= maxData;\nreturn [{ json: Object.assign({}, m, { periodo, periodo_data: pData, max_periodo: maxData, atualizar_drive }), binary: meta.binary }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [12656, 6816],
+      "id": "bb22cc33-0010-4010-8010-000000000010",
+      "name": "Decidir Drive"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
             {
-              "id": "a1b2c3d4-0001-4001-8001-000000000001",
-              "name": "nome_do_separador",
-              "value": "Base e QC",
-              "type": "string"
-            },
-            {
-              "id": "a1b2c3d4-0002-4002-8002-000000000002",
-              "name": "termo_de_pesquisa",
-              "value": "",
-              "type": "string"
+              "id": "cc33dd44-0011-4011-8011-000000000011",
+              "leftValue": "={{ $json.atualizar_drive }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
             }
-          ]
+          ],
+          "combinator": "and"
         },
         "options": {}
       },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [6912, 4000],
-      "id": "74fb0b9a-d17d-4d45-9448-2bc25d84acd2",
-      "name": "Definir Aba e Termo"
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [12880, 6700],
+      "id": "dd44ee55-0012-4012-8012-000000000012",
+      "name": "Atualizar Drive?"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Monta as linhas do ARQUIVO ENVIADO para a captura (sem ler o Drive).\n// Marca cada linha com _modo='rows_diretas' para o sub-fluxo consolidar\n// exatamente os dados desta planilha — garante o snapshot correto da data,\n// inclusive para uploads retroativos que NÃO atualizam o Drive.\nconst rows = $('Extrair Planilha (validação)').all().map(i => i.json);\nif (rows.length === 0) {\n  throw new Error('Arquivo sem linhas para captura de snapshot.');\n}\nreturn rows.map(r => ({ json: Object.assign({ _modo: 'rows_diretas' }, r) }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [12880, 6940],
+      "id": "ee55ff66-0013-4013-8013-000000000013",
+      "name": "Montar rows_diretas"
     },
     {
       "parameters": {
@@ -98,18 +206,18 @@
       },
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.2,
-      "position": [7088, 4000],
-      "id": "3f9867a9-733f-416f-b3a6-5f090b4e265d",
+      "position": [13088, 6940],
+      "id": "df3d2dcb-7494-4575-b699-6db080bc2302",
       "name": "Obter Sumário (Sub-fluxo)"
     },
     {
       "parameters": {
-        "jsCode": "// O sub-fluxo retorna o SUMARIO_PRE_CALCULADO como primeiro item.\n// Localiza o objeto que contém produtos[] (independente do wrapper).\nlet sumario = null;\nfor (const it of $input.all()) {\n  const j = it.json || {};\n  // GUARDA: se o sub-fluxo devolveu a LISTA DE ABAS, a aba configurada não existe.\n  // Falha com mensagem clara em vez de capturar vazio silenciosamente.\n  if (Array.isArray(j.abas_disponiveis)) {\n    throw new Error('Sub-fluxo retornou a lista de abas em vez dos dados. A aba configurada em \"Obter Sumário\" (nome_do_separador) não existe na planilha. Abas disponíveis: ' + j.abas_disponiveis.join(', ') + '. Ajuste o parametro nome_do_separador para uma destas.');\n  }\n  if (Array.isArray(j.produtos)) { sumario = j; break; }\n  if (j.__tipo === 'SUMARIO_PRE_CALCULADO' && Array.isArray(j.produtos)) { sumario = j; break; }\n  if (j.json && Array.isArray(j.json.produtos)) { sumario = j.json; break; }\n}\n\nif (!sumario || !Array.isArray(sumario.produtos)) {\n  // Não bloqueia o upload: apenas sinaliza que não houve captura.\n  return [{ json: { _capturar: false, motivo: 'SUMARIO_PRE_CALCULADO sem produtos[]' } }];\n}\n\nconst meta = $('Validar Arquivo').first().json;\nconst fileName = meta.received_file || null;\nreturn [{\n  json: {\n    _capturar: true,\n    produtos: sumario.produtos,\n    arquivo_nome: fileName,\n    periodo: meta.periodo || null,\n    rotulo: meta.rotulo || null,\n    user_id: null\n  }\n}];"
+        "jsCode": "// O sub-fluxo retorna o SUMARIO_PRE_CALCULADO como primeiro item.\n// Localiza o objeto que contém produtos[] (independente do wrapper).\nlet sumario = null;\nfor (const it of $input.all()) {\n  const j = it.json || {};\n  // GUARDA: se o sub-fluxo devolveu a LISTA DE ABAS, a aba configurada não existe.\n  // Falha com mensagem clara em vez de capturar vazio silenciosamente.\n  if (Array.isArray(j.abas_disponiveis)) {\n    throw new Error('Sub-fluxo retornou a lista de abas em vez dos dados. A aba configurada em \"Obter Sumário\" (nome_do_separador) não existe na planilha. Abas disponíveis: ' + j.abas_disponiveis.join(', ') + '. Ajuste o parametro nome_do_separador para uma destas.');\n  }\n  if (Array.isArray(j.produtos)) { sumario = j; break; }\n  if (j.__tipo === 'SUMARIO_PRE_CALCULADO' && Array.isArray(j.produtos)) { sumario = j; break; }\n  if (j.json && Array.isArray(j.json.produtos)) { sumario = j.json; break; }\n}\n\nif (!sumario || !Array.isArray(sumario.produtos)) {\n  // Não bloqueia o upload: apenas sinaliza que não houve captura.\n  return [{ json: { _capturar: false, motivo: 'SUMARIO_PRE_CALCULADO sem produtos[]' } }];\n}\n\nconst meta = $('Validar Arquivo').first().json || {};\nconst fileName = meta.received_file || null;\nconst periodo = meta.periodo || null;\nconst rotulo = meta.rotulo || null;\n\n// Falhar cedo: NUNCA seguir sem a data de referência.\nif (!periodo) {\n  throw new Error('periodo ausente no upload — data de referência obrigatória.');\n}\n\n// Falhar cedo: planilha lida vazia (0 produtos).\nif (sumario.produtos.length === 0) {\n  throw new Error('Captura abortada: a planilha foi lida com 0 produtos (total_anuncios=' + (sumario.total_anuncios ?? 0) + '). Verifique o arquivo enviado.');\n}\n\nreturn [{\n  json: {\n    _capturar: true,\n    produtos: sumario.produtos,\n    arquivo_nome: fileName,\n    periodo: periodo,\n    rotulo: rotulo,\n    user_id: null\n  }\n}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [7264, 4000],
-      "id": "a586bed7-0f38-4978-8525-9ec3b3ce3d1d",
+      "position": [13264, 6940],
+      "id": "998c37db-cf37-48c9-a161-89f7d1941f15",
       "name": "Preparar Captura"
     },
     {
@@ -122,43 +230,43 @@
         "options": {
           "response": {
             "response": {
-              "neverError": true,
-              "fullResponse": true
+              "fullResponse": true,
+              "neverError": true
             }
           }
         }
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [7440, 4000],
-      "id": "de721923-f9e4-43a7-858a-17703c2d2669",
+      "position": [13440, 6940],
+      "id": "69f26dce-5b64-4bbe-9786-d8cfdf8a8f17",
       "name": "Capturar Snapshot"
     },
     {
       "parameters": {
         "respondWith": "json",
-        "responseBody": "={{ JSON.stringify({ success: true, message: 'Planilha atualizada com sucesso.', file: $('Validar Arquivo').first().json.received_file }) }}",
+        "responseBody": "={{ JSON.stringify({ success: true, atualizou_base: $json.atualizar_drive, message: ($json.atualizar_drive ? 'Planilha enviada e base do agente atualizada para esta data.' : 'Planilha de data anterior: adicionada ao histórico/linha do tempo, mas a base atual do agente NÃO foi alterada.'), file: $('Validar Arquivo').first().json.received_file }) }}",
         "options": {
           "responseCode": 200
         }
       },
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
-      "position": [6880, 4256],
-      "id": "9e90decc-5edb-4148-92d0-42a9f8ac0522",
+      "position": [12880, 6500],
+      "id": "a639176d-43bc-4df5-b6cc-c42199975cc5",
       "name": "Respond OK"
     },
     {
       "parameters": {
-        "content": "## 📥 Upload Planilha Embaplan\n\nSubstitui o conteúdo da planilha oficial de anúncios consumida pelo Agente IA **e** dispara a captura de um snapshot histórico (linha do tempo — Épico 1 do PRD).\n\n**Endpoint:** `POST /webhook/embaplan-upload-planilha`\n**Body:** `multipart/form-data` com o campo `file` (xlsx/xls/csv)\n\n⚠️ Antes de ativar:\n1. Conecte a credencial **Google Drive OAuth2** no nó *Atualizar Planilha Embaplan*.\n2. Confirme que o `fileId` `113Z3z1tTYza8XYnEMBtM5elrhsus2N9yP5Ww0w3zTek` é o ID da planilha oficial.\n3. No nó *Obter Sumário (Sub-fluxo)*, selecione o workflow `[Embaplan] Sub-fluxo: Consultar Planilha Inteligente` (substitui `REPLACE_WITH_SUBFLUXO_WORKFLOW_ID`).\n4. Confirme a URL do nó *Capturar Snapshot* (webhook `embaplan-capture-snapshot` do workflow de Histórico).\n\n🔁 Fluxo: após atualizar o arquivo, o sub-fluxo gera o `SUMARIO_PRE_CALCULADO`; *Preparar Captura* extrai `produtos[]` e *Capturar Snapshot* grava 1 ponto na linha do tempo de cada anúncio. A resposta ao usuário (*Respond OK*) ocorre em paralelo, sem esperar a captura.",
-        "height": 340,
-        "width": 560,
+        "content": "## 📥 Upload Planilha Embaplan\n\nSubstitui a planilha oficial **apenas se a data enviada for a mais recente** e dispara a captura de um snapshot histórico (linha do tempo).\n\n**Endpoint:** `POST /webhook/embaplan-upload-planilha`\n**Body:** `multipart/form-data` com `file` (xlsx) + `periodo` (YYYY-MM-DD) + `rotulo`.\n\n🔁 Fluxo: valida esquema (22 colunas da aba *Base e QC*) → compara `periodo` com a data mais recente no banco → se for >= substitui o Drive (base do agente); se for anterior, **não** toca no Drive. A captura do snapshot sempre usa os dados do arquivo enviado (modo rows_diretas), então datas antigas entram corretamente na linha do tempo sem alterar a base atual.",
+        "height": 320,
+        "width": 580,
         "color": 4
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [6176, 3776],
-      "id": "a5aee7d1-62c5-4d07-9a28-226a9d20bce2",
+      "position": [11952, 6288],
+      "id": "f5bcfbc5-2deb-449b-9ec6-44035c5b928e",
       "name": "Sticky Note"
     }
   ],
@@ -178,14 +286,65 @@
       "main": [
         [
           {
-            "node": "Atualizar Planilha Embaplan",
+            "node": "Extrair Planilha (validação)",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Atualizar Planilha Embaplan": {
+    "Extrair Planilha (validação)": {
+      "main": [
+        [
+          {
+            "node": "Validar Esquema",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar Esquema": {
+      "main": [
+        [
+          {
+            "node": "Esquema OK?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Esquema OK?": {
+      "main": [
+        [
+          {
+            "node": "Buscar Período Mais Recente",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Bloquear Upload (Respond)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buscar Período Mais Recente": {
+      "main": [
+        [
+          {
+            "node": "Decidir Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Decidir Drive": {
       "main": [
         [
           {
@@ -194,14 +353,31 @@
             "index": 0
           },
           {
-            "node": "Definir Aba e Termo",
+            "node": "Atualizar Drive?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Montar rows_diretas",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Definir Aba e Termo": {
+    "Atualizar Drive?": {
+      "main": [
+        [
+          {
+            "node": "Atualizar Planilha Embaplan",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Montar rows_diretas": {
       "main": [
         [
           {

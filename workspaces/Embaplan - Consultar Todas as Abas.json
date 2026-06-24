@@ -11,6 +11,35 @@
     },
     {
       "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose"
+          },
+          "conditions": [
+            {
+              "id": "b0000000-0000-4000-8000-000000000010",
+              "leftValue": "={{ $json._modo }}",
+              "rightValue": "rows_diretas",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "b0000000-0000-4000-8000-000000000011",
+      "name": "Modo Rows Diretas?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [120, 240]
+    },
+    {
+      "parameters": {
         "content": "## 📚 Consultar TODAS as Abas\n\nLê o conteúdo de **todas** as abas da planilha de uma só vez e devolve o mesmo `SUMARIO_PRE_CALCULADO` consolidado (produtos[] + lojas[]) que o sub-fluxo de consulta por aba.\n\n**Uso:** chame como sub-fluxo (não precisa de parâmetros). Ideal para o fluxo de **Upload da Planilha do Mês**, que precisa capturar o snapshot de todos os anúncios de todas as abas.\n\n⚙️ Antes de ativar:\n1. Conecte a credencial **Google Sheets OAuth2** nos nós *Listar Abas API* e *Ler Todas as Abas*.\n2. Confirme o `documentId` `113Z3z1tTYza8XYnEMBtM5elrhsus2N9yP5Ww0w3zTek`.\n\n🔁 Fluxo: lista as abas → gera 1 item por aba → o nó *Ler Todas as Abas* lê cada aba → *Consolidar Tudo* junta todas as linhas e calcula as métricas.",
         "height": 300,
         "width": 560,
@@ -102,6 +131,24 @@
   "connections": {
     "Execute Workflow Trigger": {
       "main": [
+        [
+          {
+            "node": "Modo Rows Diretas?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Modo Rows Diretas?": {
+      "main": [
+        [
+          {
+            "node": "Consolidar Tudo para a IA",
+            "type": "main",
+            "index": 0
+          }
+        ],
         [
           {
             "node": "Listar Abas API",
