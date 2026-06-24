@@ -1711,6 +1711,10 @@
         font-size: 0.85rem;
         font-weight: 600;
       }
+      .dashboard-search {
+        min-width: 210px;
+        font-weight: 500;
+      }
       .dashboard-icon-btn {
         background: transparent;
         border: 1px solid var(--border-color);
@@ -4842,6 +4846,18 @@
           <i data-lucide="bar-chart-3"></i> Painel Embaplan
         </h2>
         <div class="dashboard-head-actions">
+          <input
+            id="dashboardSearchInput"
+            class="dashboard-filter dashboard-search"
+            type="search"
+            placeholder="🔎 Buscar anúncio por ID ou título..."
+            autocomplete="off"
+          />
+          <select id="dashboardMarketplaceFilter" class="dashboard-filter">
+            <option value="">Todos os marketplaces</option>
+            <option value="Shopee">Shopee</option>
+            <option value="Mercado Livre">Mercado Livre</option>
+          </select>
           <select id="dashboardLojaFilter" class="dashboard-filter">
             <option value="">Todas as lojas</option>
           </select>
@@ -7020,7 +7036,10 @@
           } catch (err) {
             console.error("Sheet upload error:", err);
             // Erro detalhado (ex.: planilha fora do padrão) → modal claro e legível.
-            showErrorModal(err.message || String(err), "Não foi possível enviar");
+            showErrorModal(
+              err.message || String(err),
+              "Não foi possível enviar",
+            );
           } finally {
             elements.uploadSheetBtn.disabled = false;
             elements.uploadSheetBtn.innerHTML = origLabel;
@@ -8099,7 +8118,7 @@
           dashboardData = Array.isArray(data.anuncios) ? data.anuncios : [];
           dashboardDataLoaded = true;
           populateLojaFilter(dashboardData, loja);
-          renderDashboard(dashboardData);
+          renderDashboard(filterByLoja());
         } catch (err) {
           content.innerHTML =
             '<div class="history-empty">Não foi possível carregar o dashboard.<br><small>' +
@@ -8146,6 +8165,14 @@
           return;
         }
         const tab = dashboardState.tab || "home";
+        const busca = (
+          document.getElementById("dashboardSearchInput")?.value || ""
+        ).trim();
+        if (busca) {
+          content.innerHTML = emojiToSvg(renderBuscaAnuncios(rows, busca));
+          if (window.lucide) lucide.createIcons();
+          return;
+        }
         if (tab === "alertas")
           content.innerHTML = emojiToSvg(renderAlertas(rows));
         else if (tab === "comparar")
@@ -8337,6 +8364,73 @@
           </div>
         </div>`;
 
+        // ---- BLOCO 1b: POR MARKETPLACE (segmentado) ----
+        const mkMap = {};
+        rows.forEach((r) => {
+          const mk = marketplaceFromLoja(r.loja);
+          if (!mkMap[mk])
+            mkMap[mk] = {
+              mk,
+              receita: 0,
+              lucro: 0,
+              invest: 0,
+              vendas: 0,
+              n: 0,
+              lojas: new Set(),
+              acosVals: [],
+              roasVals: [],
+            };
+          const m = mkMap[mk];
+          m.receita += num(r.receita);
+          m.lucro += num(r.lucro);
+          m.invest += num(r.investimento_ads);
+          m.vendas += num(r.vendas);
+          m.n += 1;
+          if (r.loja) m.lojas.add(r.loja);
+          if (num(r.acos) > 0) m.acosVals.push(num(r.acos));
+          if (num(r.roas) > 0) m.roasVals.push(num(r.roas));
+        });
+        const mkList = Object.values(mkMap).sort(
+          (a, b) => b.receita - a.receita,
+        );
+        const mktBlock =
+          mkList.length > 1
+            ? `<div class="scope-block">
+              <div class="dash-section-title">🛒 Por marketplace</div>
+              <div class="loja-cards">${mkList
+                .map((m) => {
+                  const acos = m.acosVals.length
+                    ? avg(m.acosVals)
+                    : m.receita > 0
+                      ? (m.invest / m.receita) * 100
+                      : 0;
+                  const roas = m.roasVals.length
+                    ? avg(m.roasVals)
+                    : m.invest > 0
+                      ? m.receita / m.invest
+                      : 0;
+                  const share =
+                    totReceita > 0 ? (m.receita / totReceita) * 100 : 0;
+                  const icon = m.mk === "Mercado Livre" ? "🟡" : "🟠";
+                  return `<div class="loja-card">
+                    <div class="loja-card-head">
+                      <span class="loja-card-name">${icon} ${escapeHtml(m.mk)}</span>
+                      <span class="loja-card-share">${share.toFixed(0)}% da receita</span>
+                    </div>
+                    <div class="loja-metrics">
+                      <div><div class="lm-l">Receita</div><div class="lm-v">${fmtBRL(m.receita)}</div></div>
+                      <div><div class="lm-l">Lucro</div><div class="lm-v ${m.lucro >= 0 ? "good" : "bad"}">${fmtBRL(m.lucro)}</div></div>
+                      <div><div class="lm-l">ROAS</div><div class="lm-v">${roas.toFixed(1)}x</div></div>
+                      <div><div class="lm-l">ACOS</div><div class="lm-v ${acos > 15 ? "bad" : ""}">${acos.toFixed(1)}%</div></div>
+                      <div><div class="lm-l">Lojas</div><div class="lm-v">${m.lojas.size}</div></div>
+                      <div><div class="lm-l">Anúncios</div><div class="lm-v">${m.n}</div></div>
+                    </div>
+                  </div>`;
+                })
+                .join("")}</div>
+            </div>`
+            : "";
+
         // ---- BLOCO 2: POR LOJA (cada loja com seus próprios números) ----
         const lojasF = lojasFull(rows).sort((a, b) => b.receita - a.receita);
         const lojaCards = lojasF
@@ -8348,7 +8442,7 @@
                 : `<div class="loja-card-foot">✅ Sem campanhas críticas</div>`;
             return `<div class="loja-card">
               <div class="loja-card-head">
-                <span class="loja-card-name">🏪 ${escapeHtml(l.loja)}</span>
+                <span class="loja-card-name">🏪 ${escapeHtml(l.loja)}${mkBadge(l.loja)}</span>
                 <span class="loja-card-share">${share.toFixed(0)}% da receita</span>
               </div>
               <div class="loja-metrics">
@@ -8409,7 +8503,7 @@
           </div>
         </div>`;
 
-        return totalBlock + lojasBlock + charts + cols;
+        return totalBlock + mktBlock + lojasBlock + charts + cols;
       }
 
       // ----- ABA: ALERTAS -----
@@ -8815,6 +8909,34 @@
         return "";
       }
 
+      // Busca de anúncios por ID (anuncio_indice) ou título/produto.
+      // Reaproveita dashRow, então os handlers delegados (histórico/análise) já funcionam.
+      function renderBuscaAnuncios(rows, q) {
+        const norm = (s) =>
+          String(s == null ? "" : s)
+            .toLowerCase()
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "");
+        const nq = norm(q);
+        const matches = rows
+          .filter(
+            (r) =>
+              norm(r.anuncio_indice).includes(nq) ||
+              norm(r.titulo).includes(nq) ||
+              norm(r.produto).includes(nq),
+          )
+          .sort((a, b) => num(b.receita) - num(a.receita));
+        const head = `<div class="dash-section-title">🔎 Busca por “${escapeHtml(q)}” — ${matches.length} anúncio(s)</div>`;
+        if (matches.length === 0) {
+          return (
+            head +
+            '<div class="history-empty">Nenhum anúncio encontrado com esse ID ou título.<br><small>Tente o número do índice (ex.: 39) ou parte do título.</small></div>'
+          );
+        }
+        const list = matches.map((r, i) => dashRow(r, i + 1, "lucro")).join("");
+        return `<div class="scope-block">${head}<div class="dash-list">${list}</div></div>`;
+      }
+
       function dashRow(r, rank, metricKey) {
         const trend = (r.tendencia || "novo").toLowerCase();
         const trendLbl =
@@ -8955,6 +9077,12 @@
       document
         .getElementById("dashboardLojaFilter")
         .addEventListener("change", () => renderDashboard(filterByLoja()));
+      document
+        .getElementById("dashboardMarketplaceFilter")
+        .addEventListener("change", () => renderDashboard(filterByLoja()));
+      document
+        .getElementById("dashboardSearchInput")
+        .addEventListener("input", () => renderDashboard(filterByLoja()));
       // Tab switching
       document
         .getElementById("dashboardTabs")
@@ -9037,8 +9165,29 @@
 
       function filterByLoja() {
         const loja = document.getElementById("dashboardLojaFilter").value || "";
-        if (!loja) return dashboardData;
-        return dashboardData.filter((r) => r.loja === loja);
+        const mkEl = document.getElementById("dashboardMarketplaceFilter");
+        const mk = mkEl ? mkEl.value || "" : "";
+        let rows = dashboardData;
+        if (mk) rows = rows.filter((r) => marketplaceFromLoja(r.loja) === mk);
+        if (loja) rows = rows.filter((r) => r.loja === loja);
+        return rows;
+      }
+
+      // Deriva o marketplace a partir do valor BRUTO da coluna Loja:
+      // valor começando com "ML" => Mercado Livre; caso contrário => Shopee.
+      function marketplaceFromLoja(loja) {
+        return /^\s*ml/i.test(String(loja == null ? "" : loja))
+          ? "Mercado Livre"
+          : "Shopee";
+      }
+
+      // Selo visual do marketplace (cores oficiais) para cards/listas.
+      function mkBadge(loja) {
+        const isML = marketplaceFromLoja(loja) === "Mercado Livre";
+        const bg = isML ? "#ffe600" : "#ee4d2d";
+        const fg = isML ? "#2d3277" : "#ffffff";
+        const label = isML ? "Mercado Livre" : "Shopee";
+        return `<span style="display:inline-block;font-size:10px;font-weight:700;padding:2px 6px;border-radius:6px;background:${bg};color:${fg};margin-left:6px;vertical-align:middle;">${label}</span>`;
       }
 
       // ============================================

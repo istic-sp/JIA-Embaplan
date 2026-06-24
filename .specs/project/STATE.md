@@ -1,11 +1,74 @@
 # State
 
-**Last Updated:** 2026-06-23
-**Current Work:** Feature `upload-multidatas` — T1–T5 implementadas; aguardando UAT (T6)
+**Last Updated:** 2026-06-25
+**Current Work:** Busca de anúncios no chat (exata por loja/índice/ID + textual acento-insensitive + semântica/typo/intenção via `sumario.catalogo[]`) — AD-012; depende do AD-011 (chat lê 100% do Supabase consolidado) — aguardando UAT no chat
 
 ---
 
 ## Recent Decisions (Last 60 days)
+
+### AD-012: Busca de anúncios — exata + textual acento-insensitive + catálogo para busca semântica da IA (2026-06-25)
+
+**Decision:** Requisito do usuário: o agente deve achar anúncios por loja, índice (ex.: `QC10`), ID, nome (parcial), e por semântica/sinônimo/typo/intenção. Divisão de trabalho: **determinístico no sub-fluxo, semântico na IA**. No sub-fluxo `[Embaplan] Sub-fluxo_ Consultar Planilha Inteligente.json` (nó `Filtrar Resultados para a IA1`): (1) busca textual agora é **acento-insensitive** via `norm()` (NFD + remove diacríticos + colapsa não-alfanumérico) — `biblico`→`Bíblicos`, `dinossauro`→`Dinossauros`, `escola dominical`, `safari`, `contos de fada`, índice e ID passam por substring normalizada; (2) branch de loja aceita termo residual (`loja 2 dinossauro` restringe; senão devolve a loja toda); (3) novo `sumario.catalogo[]` = TODOS os anúncios (loja, indice, id, titulo, status, link) + `aviso_busca`. Prompt (`Embaplan - Agent IA.json`): nova seção "🔎 MODOS DE BUSCA" — exata/textual/semântica, manda a IA percorrer `catalogo[]` por SIGNIFICADO para typo/intenção e LISTAGENS, e exige HONESTIDADE (ID inexistente = "não está na base", sem passar outro anúncio como se fosse o pedido — corrige o comportamento do screenshot).
+**Reason:** O filtro era sensível a acento e só fazia substring exato; semântica/typo/intenção são trabalho de LLM, então a tool passa a entregar o catálogo completo e a IA raciocina sobre ele. Caso real: ID `22497100181` (Loja 1, índice QC10) não era achado — em parte por ausência de dado (planilha QC10 ainda não subida no Supabase), em parte por o filtro fabricar match errado.
+**Trade-off:** Determinístico não cobre typo/intenção (proposital — fica com a IA via catálogo). `catalogo[]` aumenta o payload (aceitável no domínio, centenas de anúncios). **DADO:** anúncios precisam estar no Supabase (upload) para serem achados — a planilha aberta (Untitled-1, QC10) precisa ser enviada para testar aqueles IDs específicos.
+**Impact:** Sub-fluxo (jsCode 25.2k→26.9k; +`norm`/`matchSubstr`/`catalogo`) e `Embaplan - Agent IA.json` (systemMessage 43.x→44.6k). Validado: JSON parseia, jsCode `new Function` OK, 8 casos de busca testados contra os dados de exemplo (QC10/ID/dinossauro/biblico/escola dominical/safari/contos de fada PASS; typo retorna vazio determinístico por design). Aguarda UAT — reimportar os workflows no n8n e subir a planilha QC10.
+
+### AD-011: Chat lê 100% do Supabase consolidado — Google Sheet removido do caminho do chat (2026-06-25)
+
+**Decision:** Evolução do AD-010 (Opção A completa). O sub-fluxo do chat (`[Embaplan] Sub-fluxo_ Consultar Planilha Inteligente.json`, workflowId `tfceuFQZN1G68Xyz` — usado SÓ pelo agente; o upload usa outro sub-fluxo, `2Pt9ddSETV34vSd8`) **deixou de ler o Google Sheet** e passou a ler 100% do nó Postgres `Base Consolidada (todas as lojas)` (latest-per-ad de TODOS os batches no Supabase). O nó `Filtrar Resultados para a IA1` agora mapeia as linhas do Supabase para o formato cru do pipeline (`mapSupabaseRow`: `_metricas` vindo das colunas do snapshot + `metrics_jsonb` para cliques/impressões/conversões; `Link do Shopee` de `metrics_jsonb.link` ou montado), reconstrói `produtos[]`/`anuncios_detalhados` via `consolidarPorProduto` e calcula `sumario.lojas[]` sobre a base COMPLETA (sem slice). Conexões religadas: trigger → [`Get Previous Snapshots`, `Base Consolidada`]; `Base Consolidada` → `Filtrar Resultados para a IA1`; nós `Google Sheets`, `Tem nome da aba?` e `Listar Abas API` ficaram órfãos (não executam). Prompt: removido `lojas_arquivo_atual`/aviso de "reenviar arquivo"; PASSO 1 reduzido a 1 chamada; `nome_do_separador` agora ignorado; descrição da tool atualizada.
+**Reason:** O AD-010 (aditivo) expôs `lojas[]` consolidado, mas a FONTE de dados do agente (produtos/filtro) ainda era o Google Sheet (sobrescrito a cada upload → só a última loja), e o agente usava a tool como leitor de abas ("não encontrei a base com as abas esperadas"). O `metrics_jsonb` já persiste o detalhe completo por anúncio, então o Supabase substitui o Sheet sem perda.
+**Trade-off:** Detalhe anúncio-a-anúncio agora disponível para TODAS as lojas (some a limitação do AD-010). `alteracoes_desde_ultimo_upload` passa a comparar base consolidada vs último batch (`Get Previous Snapshots`) — semântica levemente diferente, info secundária. Não testado em n8n ao vivo.
+**Impact:** Sub-fluxo (jsCode 24.7k→25.2k; `Google Sheets`/`Tem nome da aba?`/`Listar Abas API` desconectados) e `Embaplan - Agent IA.json` (PASSO 1, bullet de lojas e descrição da tool). Validado: JSON parseia, jsCode `new Function` OK, conexões conferidas. **Supersede:** limitação do AD-010 ("reenviar arquivo para detalhe"). Aguarda UAT — usuário ausente, decisão autônoma (Opção A confirmada pelo usuário).
+
+### AD-010: Agente só via lojas do último upload — adicionada base consolidada (5 lojas) (2026-06-25)
+
+**Decision:** Causa raiz da reclamação "o sistema tem 5 lojas e ele só considera o último arquivo": o agente lê o **Google Sheet mestre** (`113Z3z...`), que o upload SOBRESCREVE a cada envio (`Atualizar Planilha Embaplan` = googleDrive update, `changeFileContent:true`, só quando período é o mais novo). Já o dashboard lê `embaplan_latest_overview` (Supabase) = último estado por anúncio em TODOS os batches → mostra as 5 lojas. **Fix (Opção A, aditivo/reversível):** no sub-fluxo `[Embaplan] Sub-fluxo_ Consultar Planilha Inteligente.json` adicionado nó Postgres `Base Consolidada (todas as lojas)` (latest-per-ad de TODOS os batches, mesmo padrão da RPC de overview), conectado ao trigger em paralelo. O nó `Filtrar Resultados para a IA1` agrega essas linhas por loja (try/catch) e passa a expor `sumario.lojas[]` = CONSOLIDADO (todas as lojas) + novo `sumario.lojas_arquivo_atual[]` = só o upload atual + `total_anuncios_consolidado` + `aviso_lojas`. **NÃO** mexe na auditoria profunda (`produtos[]`/`anuncios_detalhados` continuam do Google Sheet do período atual) nem na detecção de alterações (`Get Previous Snapshots` intacto). Prompt do agente atualizado: `lojas[]` = base consolidada (quais/quantas lojas existem); auditoria profunda = upload mais recente.
+**Reason:** AD-007/AD-009 (prompt + filtro) não resolviam porque a FONTE do agente (Google Sheet) só tem o último arquivo. A base consolidada (5 lojas) só existe no Supabase.
+**Trade-off:** O agente lista/contabiliza todas as lojas, mas detalhe anúncio-a-anúncio de lojas fora do último upload exige reenviar o arquivo (limitação honesta, comunicada). Query extra por chamada (indexada). Não rebuildou o pipeline de enriquecimento (risco baixo, sem testar n8n ao vivo).
+**Impact:** Sub-fluxo (+1 nó Postgres, +conexão, jsCode 21.9k→24.7k) e `Embaplan - Agent IA.json` (systemMessage 42.5k→43.2k). Validado: JSON parseia, jsCode sintaxe OK (new Function), nó+conexão presentes. Aguarda UAT — usuário ausente, decisão autônoma (Opção A).
+
+### AD-009: "Loja 1" vinha como "ML2" — causa raiz no filtro do sub-fluxo + reforço no prompt (2026-06-25)
+
+**Decision:** Bug real: o filtro de loja em `[Embaplan] Sub-fluxo_ Consultar Planilha Inteligente.json` (nó `Filtrar Resultados para a IA1`) usava regex ANCORADA só-dígitos `/^loja\s*[-_]?\s*(\d+)$/i` — só filtrava se `termo_de_pesquisa` fosse EXATAMENTE "loja N". Como o agente mandava termo genérico/variado, caía no branch que devolve TODAS as lojas, e o agente lia `sumario.lojas[0]` (ordenado por receita = ML2). **Fix camada dados:** regex agora `/\bloja[\s_-]+([a-z0-9]+)/i` (acha "loja X" em qualquer posição, aceita alfanumérico tipo "ML2", exige separador p/ não casar o plural "lojas"), comparação `lojaVal === filtroLoja` ambos `.toLowerCase()`. **Fix camada prompt:** nova regra na seção "Loja N" — SEMPRE chamar a tool com `termo_de_pesquisa` = `loja <valor>` e NUNCA usar `sumario.lojas[0]` como "Loja 1".
+**Reason:** AD-007 (só prompt) não bastou porque o erro também estava nos dados: o sub-fluxo não filtrava de forma robusta, então o agente recebia tudo e adivinhava errado.
+**Trade-off:** Regex mais permissiva pode, em casos raros (ex.: "loja do produto X"), capturar token inválido e retornar 0 anúncios — recuperável (agente lista lojas disponíveis), e muito melhor que devolver a loja errada.
+**Impact:** `[Embaplan] Sub-fluxo_ Consultar Planilha Inteligente.json` + `Embaplan - Agent IA.json` (systemMessage 41.9k → 42.5k). Validado: ambos JSON parseiam, regex testada em 10 termos (filtra "loja 1"/"anuncios da loja 1"/"loja ml2"; ignora "quais lojas tenho"/"lojas"). Aguarda UAT no chat.
+
+### AD-008: Busca por ID no dashboard + ID & título nas menções do agente (2026-06-25)
+
+**Decision:** (1) **Front** — novo input `#dashboardSearchInput` em `.dashboard-head-actions`; `renderDashboard` desvia para `renderBuscaAnuncios(rows, q)` quando há texto, filtrando `dashboardData` por `anuncio_indice`/`titulo`/`produto` (normalizado sem acento) e reusando `dashRow` (handlers delegados de histórico/análise continuam funcionando). Respeita os filtros de loja/marketplace por passar pelo funil `filterByLoja()`. (2) **Agente** — cabeçalho do card vira `📢 CAMPANHA: Index #[NÚMERO] — "[TÍTULO REAL]"` e nova "REGRA DE OURO" exige citar IDENTIFICADOR + TÍTULO juntos em QUALQUER menção (inclusive MODO RÁPIDO).
+**Reason:** Usuário pediu localizar anúncio por ID no dashboard e o agente omitia o título (empresa localiza melhor pelo título).
+**Trade-off:** Front 100% client-side (sem refetch); agente só prompt. Busca filtra a base já carregada — não busca histórico não exibido.
+**Impact:** `front.html` (sem erros) e `Embaplan - Agent IA.json` (systemMessage 41.1k → 41.9k chars, validado). Aguarda UAT.
+
+### AD-007: Corrigir interpretação do agente ("Loja N" literal + modo factual) (2026-06-24)
+
+**Decision:** Inseridas 2 seções no topo do `systemMessage` do nó `RAG AI Agent`: (1) **Identidade da base / modo de resposta** — o agente SEMPRE tem acesso à base (tool `Consultar_Planilha_Inteligente1` lê a planilha mais recente); proibido dizer "não tenho base de dados"; MODO RÁPIDO (factual, resposta curta sem protocolo de 4 passos) vs MODO AUDITORIA (profundo). (2) **Interpretação de "Loja N"** — refere-se ao VALOR LITERAL da coluna `Loja` ("1","2","ML2"), nunca à posição/índice; "Loja 1" ≠ "Loja ML2"; se a loja não existir, listar as disponíveis em `sumario.lojas[].loja` em vez de devolver outra.
+**Reason:** Agente confundia "loja 1" com a 1ª loja da lista (ML2) e negava ter base ao responder perguntas factuais simples (ex.: "quantos anúncios na base").
+**Trade-off:** Apenas prompt; nenhuma mudança de dados/RPC. Risco de o modelo ainda escolher o modo errado — mitigado com exemplos explícitos de cada modo.
+**Impact:** Edição isolada em `Embaplan - Agent IA.json` (systemMessage 38.9k → 41.1k chars). Validado: JSON parseia, acentos OK, seções presentes. Aguarda UAT no chat.
+
+### AD-006: Segmentação por marketplace no dashboard é 100% client-side (2026-06-24)
+
+**Decision:** Derivar o marketplace no front a partir do valor BRUTO de `r.loja` (`marketplaceFromLoja`: começa com `ML` → Mercado Livre; senão → Shopee). Adicionado `<select id="dashboardMarketplaceFilter">` (Todos/Shopee/Mercado Livre), filtro composto dentro de `filterByLoja()`, badge de marketplace nos cards de loja (`mkBadge`) e bloco "🛒 Por marketplace" no `renderHome` (exibido quando há 2+ marketplaces).
+**Reason:** O valor bruto de `loja` (com prefixo ML/numérico) é preservado de ponta a ponta até `anuncios[].loja`. Não há campo `marketplace` em snapshot/RPC e não é necessário criar — derivação no cliente evita migração, mudança de RPC e re-captura de snapshots.
+**Trade-off:** O dropdown de loja continua listando todas as lojas mesmo com marketplace filtrado (selecionar loja de outro marketplace → resultado vazio). Aceitável; evita re-popular o dropdown.
+**Impact:** Mudanças isoladas em `front.html`; `filterByLoja()` agora aplica loja + marketplace e alimenta todos os tabs/sidebar. Zero alteração de backend.
+
+### AD-005: Limitar `range` no `extractFromFile` xlsx para conter used range inflado (2026-06-24)
+
+**Decision:** Setar a opção `range` (notação A1) nos nós xlsx do `extractFromFile`: `Extrair Planilha (validação)` (upload) = `A1:AD100000`; `Extract from Excel` (RAG) = `A1:CV100000`.
+**Reason:** Alguns .xlsx vêm com `<dimension>` inflada (ex.: `A1:AMJ1048576` = 1.048.576 linhas x 1024 cols) com só ~86 linhas reais. SheetJS honra o `!ref` e varre o grid inteiro (~1 bi de células) + n8n cria 1M itens fantasma → 13min p/ 84 itens e estouro de memória.
+**Trade-off:** O cap de colunas/linhas trunca arquivos absurdamente grandes; folga ampla (upload 30 cols, RAG 100 cols, 100k linhas) torna isso implausível no domínio.
+**Impact:** n8n repassa o `range` direto ao `sheet_to_json`; com range, ele itera só a faixa e pula linhas vazias. Comprovado: sem range trava >min; com range = 84 linhas/22 cols/~1.2s, dados idênticos.
+
+### AD-004: Padrão da planilha vira multi-marketplace por prefixo da coluna `Loja` (2026-06-24)
+
+**Decision:** A coluna `Loja` passa a definir o marketplace: valor começando com `ML` → Mercado Livre; começando com `S` ou qualquer outro (padrão) → Shopee. O link de ML é montado SÓ pelo ID do anúncio no formato `https://produto.mercadolivre.com.br/MLB-{digitos}-_JM`; o de Shopee mantém `LOJAS[chave_numérica]` + `https://shopee.com.br/{slug}-i.{shop_id}.{ad_id}`. O gate de esquema passou a aceitar SINÔNIMOS por grupo (22 colunas), tolerando os nomes novos (`Nome`, `Convertidos`, `$Clicks`, `Conversão`/`Tx.Conver.`, `Vendidos`, `Investimento`, `Anunciada`, `%l.Medio`, `%Lliquido`, `indice`, `INDEX`) e os antigos.
+**Reason:** A planilha agora pode conter anúncios de Shopee e Mercado Livre no mesmo padrão; os nomes de colunas variam entre exports.
+**Trade-off:** O campo de saída continua chamado `Link do Shopee` (compat com front/histórico/agente) embora possa conter link de ML.
+**Impact:** `montarLinkShopee` + helpers (`detectarMarketplace`, `lojaKeyNumerica`, `montarLinkMercadoLivre`) e picks de métricas/título atualizados em `Consultar Planilha Inteligente` e `Consultar Todas as Abas`; gate em `Upload-Planilha-Anuncios` reescrito com grupos de sinônimos. Spec em `.specs/features/padrao-planilha-multimarketplace/`.
 
 ### AD-001: Documentar o projeto existente com spec-driven (2026-06-23)
 
@@ -37,6 +100,13 @@ _Nenhum no momento._
 ---
 
 ## Lessons Learned
+
+### L-007: `extractFromFile` xlsx varre o used range declarado, não os dados reais (2026-06-24)
+
+**Context:** Nó `Extrair Planilha (validação)` levou 13min para 84 itens e "quebrava a infra".
+**Problem:** O .xlsx tinha `<dimension>` inflada (`A1:AMJ1048576`). SheetJS `sheet_to_json` itera todo o `!ref` (1M linhas x 1024 cols ≈ 1 bi de células) e o n8n materializa 1M de itens vazios.
+**Solution:** Setar a opção `range` (string A1) no nó; n8n a repassa ao `sheet_to_json`, que itera só a faixa e pula linhas vazias (saída = linhas reais). Diagnóstico: ler `xl/worksheets/sheetN.xml` (xlsx = zip) e checar `<dimension ref>`.
+**Prevents:** Parse de minutos e OOM por planilhas com used range inflado (comum em exports/edições no Excel).
 
 ### L-001: Backend vive em n8n + RPCs, não em código de servidor (2026-06-23)
 
@@ -93,7 +163,7 @@ _Nenhum no momento._
 
 ## Deferred Ideas
 
-- [ ] Suporte multi-marketplace (Mercado Livre/Amazon/Shein) — Captured during: mapeamento (citado nos prompts do agente)
+- [~] Suporte multi-marketplace (Mercado Livre/Amazon/Shein) — Mercado Livre + Shopee ENTREGUES (AD-004); Amazon/Shein pendentes
 - [ ] Externalizar mapeamento loja→shop_id Shopee — Captured during: mapeamento (INTEGRATIONS/CONCERNS)
 - [ ] Modularizar `front.html` (extrair JS/CSS) — Captured during: mapeamento (CONCERNS)
 

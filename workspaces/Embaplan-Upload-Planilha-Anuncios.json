@@ -12,7 +12,10 @@
       },
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
-      "position": [11552, 6816],
+      "position": [
+        11552,
+        6816
+      ],
       "id": "538ded0d-c948-4c89-8c98-22f54269d4f3",
       "name": "Webhook Upload Planilha",
       "webhookId": "c0ffee01-1234-4567-8901-aabbccddeeff"
@@ -23,7 +26,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [11776, 6816],
+      "position": [
+        11776,
+        6816
+      ],
       "id": "0834012f-becc-4860-a1bd-5e910e13dee7",
       "name": "Validar Arquivo"
     },
@@ -31,21 +37,29 @@
       "parameters": {
         "operation": "xlsx",
         "binaryPropertyName": "data0",
-        "options": {}
+        "options": {
+          "range": "A1:AD100000"
+        }
       },
       "type": "n8n-nodes-base.extractFromFile",
       "typeVersion": 1,
-      "position": [11936, 6816],
+      "position": [
+        11936,
+        6816
+      ],
       "id": "32b83cb5-85e2-49a3-9684-6b31479b55a5",
       "name": "Extrair Planilha (validação)"
     },
     {
       "parameters": {
-        "jsCode": "// Gate de esquema: valida a planilha recebida ANTES de substituir a oficial.\n// Exige EXATAMENTE as 22 colunas padrão da aba \"Base e QC\".\n// NÃO lança erro: marca _schema_ok para o nó IF ramificar e responder ao front.\nconst EXPECTED = ['#','Loja','Index','ID do Anúncio','Nome do Anúncio','Impressões','Cliques','CTR','Conversões','Custo por Conversão','Taxa de Conversão','Itens Vendidos','GMV','Despesas','ACOS','Categoria','Tamanho','Qtd','% Lucro Médio P','lucro liquido','% Lucro','Índice'];\nconst norm = s => String(s == null ? '' : s).normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().replace(/\\s+/g, ' ').trim();\nconst isJunk = c => { const n = norm(c); return n === '' || /^__empty/.test(n); };\nconst orig = $('Validar Arquivo').first();\nconst linhas = $input.all();\nlet erro = null;\nif (linhas.length === 0) {\n  erro = 'Planilha fora do padrão: não foi possível ler a aba principal (esperado \"Base e QC\" com 22 colunas). Verifique se enviou a planilha correta.';\n} else {\n  const colsRaw = Object.keys(linhas[0].json || {}).filter(c => !isJunk(c));\n  const colsNorm = colsRaw.map(norm);\n  const expNorm = EXPECTED.map(norm);\n  const faltando = EXPECTED.filter((c, i) => !colsNorm.includes(expNorm[i]));\n  const extras = colsRaw.filter(c => !expNorm.includes(norm(c)));\n  if (faltando.length > 0 || extras.length > 0 || colsNorm.length !== expNorm.length) {\n    erro = ['Planilha fora do padrão — upload BLOQUEADO (a planilha oficial NÃO foi alterada).', 'Esperado: aba \"Base e QC\" com exatamente 22 colunas.', 'Faltando (' + faltando.length + '): ' + (faltando.length ? faltando.join(', ') : 'nenhuma'), 'Inesperadas (' + extras.length + '): ' + (extras.length ? extras.join(', ') : 'nenhuma'), 'Recebidas (' + colsRaw.length + '): ' + colsRaw.join(', ')].join(' | ');\n  }\n}\nif (erro) {\n  return [{ json: { _schema_ok: false, _erro: erro } }];\n}\n// OK: repassa o item ORIGINAL (com binário data0 + periodo/rotulo) marcando a flag.\nreturn [{ json: Object.assign({}, orig.json, { _schema_ok: true }), binary: orig.binary }];"
+        "jsCode": "// Gate de esquema: valida a planilha recebida ANTES de substituir a oficial.\n// Aceita Shopee (22 colunas) e Mercado Livre (19 colunas, sem Categoria/Tamanho/Qtd).\n// NÃO lança erro: marca _schema_ok para o nó IF ramificar e responder ao front.\nconst EXPECTED_GROUPS = [['#'],['Loja'],['Index','INDEX'],['ID do Anúncio','ID do anúncio'],['Nome do Anúncio','Nome'],['Impressões'],['Cliques'],['CTR'],['Conversões','Convertidos'],['Custo por Conversão','$Clicks','$clicks'],['Taxa de Conversão','Conversão','Tx.Conver.'],['Itens Vendidos','Vendidos'],['GMV'],['Despesas','Investimento'],['ACOS'],['Categoria'],['Tamanho','tamanho'],['Qtd','Anunciada'],['% Lucro Médio P','%l.Medio'],['lucro liquido'],['% Lucro','%Lliquido'],['Índice','indice']];\nconst norm = s => String(s == null ? '' : s).normalize('NFD').replace(/[\\u0300-\\u036f]/g, '').toLowerCase().replace(/\\s+/g, ' ').trim();\nconst isJunk = c => { const n = norm(c); return n === '' || /^__empty/.test(n); };\nconst orig = $('Validar Arquivo').first();\nconst linhas = $input.all();\nlet erro = null;\nif (linhas.length === 0) {\n  erro = 'Planilha fora do padrão: não foi possível ler a aba principal (esperado Shopee com 22 colunas ou Mercado Livre com 19). Verifique se enviou a planilha correta.';\n} else {\n  const colsRaw = Object.keys(linhas[0].json || {}).filter(c => !isJunk(c));\n  const colsNorm = colsRaw.map(norm);\n  const gruposNorm = EXPECTED_GROUPS.map(g => g.map(norm));\n  const todosSin = gruposNorm.reduce((acc, g) => acc.concat(g), []);\n  // Colunas exclusivas da Shopee: opcionais (planilhas do Mercado Livre não as têm).\n  const opcionaisNorm = ['categoria','tamanho','qtd','anunciada'];\n  const isOpcional = g => g.map(norm).some(s => opcionaisNorm.includes(s));\n  const faltando = EXPECTED_GROUPS.filter(g => !isOpcional(g)).filter(g => !g.map(norm).some(s => colsNorm.includes(s))).map(g => g[0]);\n  const extras = colsRaw.filter(c => !todosSin.includes(norm(c)));\n  if (faltando.length > 0 || extras.length > 0) {\n    erro = ['Planilha fora do padrão — upload BLOQUEADO (a planilha oficial NÃO foi alterada).', 'Esperado: Shopee (22 colunas) ou Mercado Livre (19 colunas, sem Categoria/Tamanho/Qtd).', 'Faltando (' + faltando.length + '): ' + (faltando.length ? faltando.join(', ') : 'nenhuma'), 'Inesperadas (' + extras.length + '): ' + (extras.length ? extras.join(', ') : 'nenhuma'), 'Recebidas (' + colsRaw.length + '): ' + colsRaw.join(', ')].join(' | ');\n  }\n}\nif (erro) {\n  return [{ json: { _schema_ok: false, _erro: erro } }];\n}\n// OK: repassa o item ORIGINAL (com binário data0 + periodo/rotulo) marcando a flag.\nreturn [{ json: Object.assign({}, orig.json, { _schema_ok: true }), binary: orig.binary }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [12112, 6816],
+      "position": [
+        12112,
+        6816
+      ],
       "id": "4ad35c9d-a02c-4f52-a438-c2a8889ab12c",
       "name": "Validar Esquema"
     },
@@ -75,7 +89,10 @@
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [12288, 6816],
+      "position": [
+        12288,
+        6816
+      ],
       "id": "e1f2a3b4-0007-4007-8007-000000000007",
       "name": "Esquema OK?"
     },
@@ -89,7 +106,10 @@
       },
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
-      "position": [12512, 7120],
+      "position": [
+        12512,
+        7120
+      ],
       "id": "a7b8c9d0-0008-4008-8008-000000000008",
       "name": "Bloquear Upload (Respond)"
     },
@@ -107,7 +127,10 @@
       },
       "type": "n8n-nodes-base.googleDrive",
       "typeVersion": 3,
-      "position": [13120, 6620],
+      "position": [
+        13120,
+        6620
+      ],
       "id": "3c535875-0695-482e-8e15-b1287d649271",
       "name": "Atualizar Planilha Embaplan",
       "credentials": {
@@ -125,7 +148,10 @@
       },
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
-      "position": [12480, 6816],
+      "position": [
+        12480,
+        6816
+      ],
       "id": "aa11bb22-0009-4009-8009-000000000009",
       "name": "Buscar Período Mais Recente",
       "credentials": {
@@ -141,7 +167,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [12656, 6816],
+      "position": [
+        12656,
+        6816
+      ],
       "id": "bb22cc33-0010-4010-8010-000000000010",
       "name": "Decidir Drive"
     },
@@ -171,7 +200,10 @@
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [12880, 6700],
+      "position": [
+        12880,
+        6700
+      ],
       "id": "dd44ee55-0012-4012-8012-000000000012",
       "name": "Atualizar Drive?"
     },
@@ -181,7 +213,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [12880, 6940],
+      "position": [
+        12880,
+        6940
+      ],
       "id": "ee55ff66-0013-4013-8013-000000000013",
       "name": "Montar rows_diretas"
     },
@@ -206,7 +241,10 @@
       },
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.2,
-      "position": [13088, 6940],
+      "position": [
+        13088,
+        6940
+      ],
       "id": "df3d2dcb-7494-4575-b699-6db080bc2302",
       "name": "Obter Sumário (Sub-fluxo)"
     },
@@ -216,7 +254,10 @@
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [13264, 6940],
+      "position": [
+        13264,
+        6940
+      ],
       "id": "998c37db-cf37-48c9-a161-89f7d1941f15",
       "name": "Preparar Captura"
     },
@@ -238,7 +279,10 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [13440, 6940],
+      "position": [
+        13440,
+        6940
+      ],
       "id": "69f26dce-5b64-4bbe-9786-d8cfdf8a8f17",
       "name": "Capturar Snapshot"
     },
@@ -252,7 +296,10 @@
       },
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
-      "position": [12880, 6500],
+      "position": [
+        12880,
+        6500
+      ],
       "id": "a639176d-43bc-4df5-b6cc-c42199975cc5",
       "name": "Respond OK"
     },
@@ -265,7 +312,10 @@
       },
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [11952, 6288],
+      "position": [
+        11952,
+        6288
+      ],
       "id": "f5bcfbc5-2deb-449b-9ec6-44035c5b928e",
       "name": "Sticky Note"
     }

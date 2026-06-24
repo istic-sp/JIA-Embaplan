@@ -293,7 +293,9 @@
     {
       "parameters": {
         "operation": "xlsx",
-        "options": {}
+        "options": {
+          "range": "A1:CV100000"
+        }
       },
       "id": "50a3538b-c2f9-4f6e-9d82-60cb6a41d145",
       "name": "Extract from Excel",
